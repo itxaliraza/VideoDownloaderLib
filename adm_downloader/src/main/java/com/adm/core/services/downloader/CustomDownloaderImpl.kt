@@ -396,12 +396,16 @@ class CustomDownloaderImpl(
                 connection = URL(url).openConnection() as HttpURLConnection
                 connection.requestMethod = "HEAD"
                 connection.connect()
+                model.headers.forEach { t, u ->
+                    connection.setRequestProperty(t, u)
+                }
 
                 val acceptRanges = connection.getHeaderField("Accept-Ranges")
                 val supportsRange = acceptRanges?.equals("bytes", ignoreCase = true) ?: false
 
                 val contentLength =
                     connection.getHeaderField("Content-Length")?.toLongOrNull() ?: -1L
+
 
                 Result.success(Pair(supportsRange, contentLength))
             } catch (e: Exception) {
