@@ -1,6 +1,7 @@
 package com.adm.core.services.downloader
 
 import android.content.Context
+import android.os.Build.VERSION_CODES.M
 import com.adm.core.components.DownloadingState
 import com.adm.core.m3u8.AnalyticHelper
 import com.adm.core.m3u8.MaxParallelDownloads
@@ -41,10 +42,10 @@ import java.util.UUID
 class CustomDownloaderImpl(
     private val context: Context,
     private val tempDirProvider: TempDirProvider = TempDirProviderImpl(context = context),
-    private val videosMerger: VideosMerger=SimpleVideosMergerImpl(LoggerImpl()),
-    private val analyticHelper: AnalyticHelper= MyAnalyticHelper(),
-    private val maxParallelDownloads: MaxParallelDownloads= MaxParallelDownloadsImpl(),
-    private val logger: Logger=LoggerImpl()
+    private val videosMerger: VideosMerger = SimpleVideosMergerImpl(LoggerImpl()),
+    private val analyticHelper: AnalyticHelper = MyAnalyticHelper(),
+    private val maxParallelDownloads: MaxParallelDownloads = MaxParallelDownloadsImpl(),
+    private val logger: Logger = LoggerImpl()
 ) : MediaDownloader {
     private val TAG = "CustomDownloaderImpl"
 
@@ -158,12 +159,12 @@ class CustomDownloaderImpl(
                     throw Exception("Error Getting Length ${it.message}")
                 }
                 chunkSupportAndLengthResult.onSuccess { chunkSupportAndLength ->
-                    if (chunkSupportAndLength.second == -1L) {
-                        throw Exception("Error Getting Length Invalid")
-                    }
+//                    if (chunkSupportAndLength.second == -1L) {
+//                        throw Exception("Error Getting Length Invalid")
+//                    }
                     totalBytesSize = chunkSupportAndLength.second
                     logger.logMessage(TAG, "destFil totalBytesSize= $totalBytesSize")
-                    if (supportChunking && chunkSupportAndLength.first) {
+                    if (supportChunking && chunkSupportAndLength.first&& chunkSupportAndLength.second>0) {
                         val chunks = getChunks(chunkSupportAndLength.second)
                         filesToDownload = chunks.size
                         logger.logMessage(TAG, "Chunks to download = $chunks")
@@ -237,7 +238,7 @@ class CustomDownloaderImpl(
         try {
             connection = URL(model.url).openConnection() as HttpURLConnection
 
-            if (destFile.length() >= (endSize - startSize)) {
+            if (destFile.length() >= (endSize - startSize) &&destFile.length()>0) {
                 filesDownloaded += 1
                 logger.logMessage(
                     TAG,
@@ -344,7 +345,7 @@ class CustomDownloaderImpl(
          } else {
              mDestFile?.length() ?: 0L
          }*/
-        return Pair(sum, totalBytesSize)
+        return Pair(sum, totalBytesSize.coerceAtLeast(sum))
     }
 
 
@@ -390,9 +391,25 @@ class CustomDownloaderImpl(
 
     private suspend fun getVideoChunksSupportAndLength(url: String): Result<Pair<Boolean, Long>> {
         return withContext(Dispatchers.IO) {
-            var connection: HttpURLConnection? = null
+            val (supportChunks, length) = performHeadRequest(url).getOrElse {
+                false to -1L
+            }
+            val (supportChunks2, length2) = if (supportChunks.not()||length==-1L) {
+                performGetRequestWithRange(url).getOrElse { false to -1L }
+            } else {
+               supportChunks to length
+            }
+            val finalLength: Long = maxOf(length,length2)
 
-            return@withContext try {
+            return@withContext Result.success(Pair(supportChunks||supportChunks2, finalLength.toLong()))
+        }
+    }
+
+
+    private suspend fun performHeadRequest(url: String): Result<Pair<Boolean, Long>> {
+        return withContext(Dispatchers.IO) {
+            var connection: HttpURLConnection? = null
+            try {
                 connection = URL(url).openConnection() as HttpURLConnection
                 connection.requestMethod = "HEAD"
                 model.headers.forEach { t, u ->
@@ -400,19 +417,72 @@ class CustomDownloaderImpl(
                 }
                 connection.connect()
 
+                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    val acceptRanges = connection.getHeaderField("Accept-Ranges")
+                    val supportsRange = acceptRanges?.equals("bytes", ignoreCase = true) ?: false
 
-                val acceptRanges = connection.getHeaderField("Accept-Ranges")
-                val supportsRange = acceptRanges?.equals("bytes", ignoreCase = true) ?: false
+                    val contentLength =
+                        connection.getHeaderField("Content-Length")?.toLongOrNull() ?: -1L
 
-                val contentLength =
-                    connection.getHeaderField("Content-Length")?.toLongOrNull() ?: -1L
+                    return@withContext Result.success(Pair(supportsRange, contentLength))
+                }
 
-
-                Result.success(Pair(supportsRange, contentLength))
+                Result.failure(Exception("HEAD request failed"))
             } catch (e: Exception) {
-                if (e is CancellationException)
-                    throw e
-                e.printStackTrace()
+                if (e is CancellationException) throw e
+                Result.failure(e)
+            } finally {
+                connection?.disconnect()
+            }
+        }
+    }
+
+    /**
+     * Performs a GET request with the Range header to check for range support and fetch Content-Length.
+     */
+    private suspend fun performGetRequestWithRange(url: String): Result<Pair<Boolean, Long>> {
+        return withContext(Dispatchers.IO) {
+            var connection: HttpURLConnection? = null
+            try {
+                connection = URL(url).openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.setRequestProperty(
+                    "Range",
+                    "bytes=0-1"
+                ) // Request only the first 2 bytes
+                model.headers.forEach { t, u ->
+                    connection.setRequestProperty(t, u)
+                }
+                connection.connect()
+
+                when (connection.responseCode) {
+                    HttpURLConnection.HTTP_PARTIAL -> {
+                        // Server supports Range requests
+                        val acceptRanges = connection.getHeaderField("Accept-Ranges")
+                        val supportsRange =
+                            acceptRanges?.equals("bytes", ignoreCase = true) ?: false
+
+                        // Extract Content-Length from Content-Range header
+                        val contentRange = connection.getHeaderField("Content-Range")
+                        val contentLength =
+                            contentRange?.substringAfterLast("/")?.toLongOrNull() ?: -1L
+
+                        if (contentLength != -1L) {
+                            return@withContext Result.success(Pair(supportsRange, contentLength))
+                        }
+                    }
+
+                    HttpURLConnection.HTTP_OK -> {
+                        // Server does not support Range requests but returns the full content
+                        val contentLength =
+                            connection.getHeaderField("Content-Length")?.toLongOrNull() ?: -1L
+                        return@withContext Result.success(Pair(false, contentLength))
+                    }
+                }
+
+                Result.failure(Exception("GET request with Range header failed"))
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Result.failure(e)
             } finally {
                 connection?.disconnect()
