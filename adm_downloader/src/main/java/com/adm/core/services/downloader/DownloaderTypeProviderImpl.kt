@@ -1,7 +1,6 @@
 package com.adm.core.services.downloader
 
 import android.content.Context
-import com.adm.core.m3u8.AnalyticHelper
 import com.adm.core.m3u8.M3u8DownloaderParallel
 import com.adm.core.m3u8.MaxParallelDownloads
 import com.adm.core.m3u8.TempDirProvider
@@ -18,7 +17,6 @@ class DownloaderTypeProviderImpl(
     private val videosMerger: VideosMerger,
     private val logger: Logger,
     private val maxParallelDownloads: MaxParallelDownloads,
-    private val analyticHelper: AnalyticHelper
 ) : DownloaderTypeProvider {
     override fun providerDownloader(url: String): MediaDownloader {
 
@@ -30,7 +28,6 @@ class DownloaderTypeProviderImpl(
                 videosMerger = videosMerger,
                 logger = logger,
                 maxParallelDownloads = maxParallelDownloads,
-                analyticHelper = analyticHelper
 
             ) else
             CustomDownloaderImpl(
@@ -39,7 +36,6 @@ class DownloaderTypeProviderImpl(
                 videosMerger = videosMerger,
                 logger = logger,
                 maxParallelDownloads = maxParallelDownloads,
-                analyticHelper = analyticHelper
             )
 
     }

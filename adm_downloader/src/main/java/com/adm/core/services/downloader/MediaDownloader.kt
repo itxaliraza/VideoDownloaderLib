@@ -22,4 +22,4 @@ interface MediaDownloader {
     fun pauseDownloading()
 }
 
-data class MediaProgress(val downStatus: DownloadingState, val downSize: Long, val totalSize: Long)
+data class MediaProgress(val downStatus: DownloadingState, val downSize: Long, val totalSize: Long,val exc:Exception?=null)

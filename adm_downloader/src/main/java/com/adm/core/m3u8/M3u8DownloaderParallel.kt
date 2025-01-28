@@ -32,7 +32,6 @@ class M3u8DownloaderParallel(
     private val m3U8PlaylistParser: M3u8ChunksPicker = M3u8ChunksPickerImpl(),
     private val videosMerger: VideosMerger,
     private val logger: Logger,
-    private val analyticHelper: AnalyticHelper,
     private val maxParallelDownloads: MaxParallelDownloads
 
 ) : MediaDownloader {
@@ -88,7 +87,6 @@ class M3u8DownloaderParallel(
                             context = context,
                             tempDirProvider = tempDirProvider,
                             videosMerger = videosMerger,
-                            analyticHelper = analyticHelper,
                             maxParallelDownloads = maxParallelDownloads,
                             logger = logger,
                         )
@@ -137,9 +135,8 @@ class M3u8DownloaderParallel(
             } catch (e: Exception) {
                 if (e is CancellationException)
                     throw e
-                analyticHelper.logCrash(e)
                 isFailed = true
-                emitProgress()
+                emitProgress(e)
                 Log.d("Cvrrr", "Base Url  Exception $e")
                 scope.cancel()
                 return@withContext Result.failure(e)
@@ -181,9 +178,9 @@ class M3u8DownloaderParallel(
     }
 
 
-    private fun emitProgress() {
+    private fun emitProgress(exception: java.lang.Exception?=null) {
         _progressFlow.update {
-            MediaProgress(getCurrentStatus(), download, totalChunks)
+            MediaProgress(getCurrentStatus(), download, totalChunks,exception)
         }
     }
 

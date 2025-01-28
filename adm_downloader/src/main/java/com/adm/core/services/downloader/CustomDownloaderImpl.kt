@@ -3,10 +3,8 @@ package com.adm.core.services.downloader
 import android.content.Context
 import android.os.Build.VERSION_CODES.M
 import com.adm.core.components.DownloadingState
-import com.adm.core.m3u8.AnalyticHelper
 import com.adm.core.m3u8.MaxParallelDownloads
 import com.adm.core.m3u8.MaxParallelDownloadsImpl
-import com.adm.core.m3u8.MyAnalyticHelper
 import com.adm.core.m3u8.SimpleVideosMergerImpl
 import com.adm.core.m3u8.TempDirProvider
 import com.adm.core.m3u8.TempDirProviderImpl
@@ -43,7 +41,6 @@ class CustomDownloaderImpl(
     private val context: Context,
     private val tempDirProvider: TempDirProvider = TempDirProviderImpl(context = context),
     private val videosMerger: VideosMerger = SimpleVideosMergerImpl(LoggerImpl()),
-    private val analyticHelper: AnalyticHelper = MyAnalyticHelper(),
     private val maxParallelDownloads: MaxParallelDownloads = MaxParallelDownloadsImpl(),
     private val logger: Logger = LoggerImpl()
 ) : MediaDownloader {
@@ -71,7 +68,7 @@ class CustomDownloaderImpl(
     private val _progressFlow = MutableStateFlow(MediaProgress(DownloadingState.Progress, 0L, 0L))
     override fun getProgress() = _progressFlow.asStateFlow()
 
-    override suspend fun downloadMedia(
+     override suspend fun downloadMedia(
         url: String,
         fileName: String,
         directoryPath: String,
@@ -116,12 +113,10 @@ class CustomDownloaderImpl(
         } catch (e: Exception) {
             if (e is CancellationException)
                 throw e
-
-            analyticHelper.logCrash(e)
             updateStatus(DownloadingState.Failed)
 
             _progressFlow.update {
-                MediaProgress(getCurrentStatus(), getBytesInfo().first, totalBytesSize)
+                MediaProgress(getCurrentStatus(), getBytesInfo().first, totalBytesSize,e)
             }
             scope.cancel()
             return Result.failure(e)
