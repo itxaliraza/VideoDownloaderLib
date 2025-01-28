@@ -238,7 +238,7 @@ class CustomDownloaderImpl(
         try {
             connection = URL(model.url).openConnection() as HttpURLConnection
 
-            if (destFile.length() >= (endSize - startSize) &&destFile.length()>0) {
+            if (destFile.length() >= (endSize - startSize) &&destFile.length()>0 && endSize>0) {
                 filesDownloaded += 1
                 logger.logMessage(
                     TAG,
