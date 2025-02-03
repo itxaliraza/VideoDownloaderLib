@@ -260,6 +260,9 @@ class CustomDownloaderImpl(
             model.headers.forEach { t, u ->
                 connection.setRequestProperty(t, u)
             }
+            if (model.headers.containsKey("Accept-Encoding").not()) {
+                connection.setRequestProperty("Accept-Encoding", "gzip")
+            }
             connection.connect()
 
             if (connection.responseCode == HttpURLConnection.HTTP_PARTIAL || connection.responseCode == HttpURLConnection.HTTP_OK) {
@@ -410,6 +413,9 @@ class CustomDownloaderImpl(
                 model.headers.forEach { t, u ->
                     connection.setRequestProperty(t, u)
                 }
+                if (model.headers.containsKey("Accept-Encoding").not()) {
+                    connection.setRequestProperty("Accept-Encoding", "gzip")
+                }
                 connection.connect()
 
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
@@ -448,6 +454,10 @@ class CustomDownloaderImpl(
                 model.headers.forEach { t, u ->
                     connection.setRequestProperty(t, u)
                 }
+                if (model.headers.containsKey("Accept-Encoding").not()) {
+                    connection.setRequestProperty("Accept-Encoding", "gzip")
+                }
+
                 connection.connect()
 
                 when (connection.responseCode) {
