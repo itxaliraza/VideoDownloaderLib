@@ -61,4 +61,11 @@ dependencies {
 
     implementation(project(":adm_downloader"))
     implementation(libs.kotlinx.serialization.json)
+
+
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.core)
+    implementation(libs.koin.compose)
+    implementation(libs.sdp.compose)
+
 }

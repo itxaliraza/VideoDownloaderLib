@@ -121,11 +121,17 @@ class M3u8DownloaderParallel(
                 }
 
                 downloadJobs.awaitAll()  // Wait for all downloads to finish
-                Log.d("Cvrrr", "Base Url ${tempDirPath}")
+                Log.d("Cvrrr", "Base Url ${tempDirPath.path} ${                    File(directoryPath, fileName).path
+                }")
+
+
+                val destFile =                    File(directoryPath, fileName).path
+
+                destFile.createParentFileIfNotExists()
 
                 val result = videosMerger.mergeVideos(
                     tempDirPath.absolutePath,
-                    File(directoryPath, fileName).path
+                    destFile
                 )
                 result.getOrThrow()
                 logger.logMessage("TAG", "Streams(${streams.size}) = " + streams.toString())

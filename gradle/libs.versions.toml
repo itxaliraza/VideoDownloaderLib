@@ -11,6 +11,7 @@ composeBom = "2024.04.01"
 appcompat = "1.7.0"
 material = "1.12.0"
 kotlinxSerializationJson = "1.7.3"
+koin-bom = "4.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -30,6 +31,13 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin-bom" }
+koin-compose = { module = "io.insert-koin:koin-androidx-compose-navigation", version.ref = "koin-bom" }
+koin-core = { module = "io.insert-koin:koin-core" }
+sdp-compose = { module = "com.github.Kaaveh:sdp-compose", version = "1.1.0" }
+
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
