@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/rounded_shape"
+        app:strokeColor="@color/grey_white"
+        app:strokeWidth="0.1dp">
+
+        <com.monetization.nativeads.ui.AdmobNativeView
+            android:id="@+id/adView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/_5sdp">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/adAppIconHolder"
+                    android:layout_width="@dimen/_48sdp"
+                    android:layout_height="@dimen/_48sdp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="@dimen/_8sdp"
+                    android:clickable="false"
+                    android:elevation="0dp"
+                    android:focusable="false"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardElevation="0dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/ad_app_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:adjustViewBounds="true"
+                        android:background="@color/shimmercolor" />
+
+
+                </androidx.cardview.widget.CardView>
+
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/clAdHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    app:layout_constrainedWidth="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/adAppIconHolder"
+                    app:layout_constraintTop_toTopOf="@+id/adAppIconHolder">
+
+
+                    <TextView
+                        android:id="@+id/ad_headline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/_20sdp"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/_2sdp"
+                        android:paddingEnd="0dp"
+                        android:textColor="@color/ad_grey_color_dark"
+                        android:textSize="@dimen/_12ssp"
+                        android:textStyle="bold"
+                        app:layout_constrainedWidth="true"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.02"
+                        app:layout_constraintStart_toEndOf="@+id/addAttr"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/addAttr"
+                        android:layout_width="@dimen/_14sdp"
+                        android:layout_height="@dimen/_14sdp"
+                        android:background="@color/shimmercolor"
+                        android:gravity="center"
+                        android:padding="@dimen/_1sdp"
+                        android:text=""
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/_7ssp"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <TextView
+                    android:id="@+id/ad_body"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/_5sdp"
+                    android:layout_marginTop="@dimen/_1sdp"
+                    android:layout_marginEnd="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="start"
+                    android:lines="1"
+                    android:maxLines="1"
+                    android:textColor="#000000"
+                    android:textSize="@dimen/_8ssp"
+                    android:textStyle="normal"
+                    app:layout_constrainedWidth="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toEndOf="@+id/adAppIconHolder"
+                    app:layout_constraintTop_toBottomOf="@+id/clAdHeader" />
+
+                <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/barier_native"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:barrierDirection="bottom"
+                    app:constraint_referenced_ids="ad_body, adAppIconHolder" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/ad_call_to_action"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@color/shimmercolor"
+                    android:backgroundTint="@null"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:lineSpacingExtra="5sp"
+                    android:lines="1"
+                    android:minWidth="@dimen/_75sdp"
+                    android:minHeight="@dimen/_38sdp"
+                    android:paddingLeft="3dp"
+                    android:paddingRight="3dp"
+                    android:singleLine="true"
+                    android:text=""
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/_12ssp"
+                    android:textStyle="normal"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/barier_native" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.monetization.nativeads.ui.AdmobNativeView>
+    </LinearLayout>
+
+</FrameLayout>

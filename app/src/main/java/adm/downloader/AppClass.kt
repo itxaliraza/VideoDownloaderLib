@@ -9,6 +9,10 @@ import com.adm.core.m3u8.VideosMerger
 import com.adm.core.services.downloader.DownloaderTypeProvider
 import com.adm.core.services.downloader.DownloaderTypeProviderImpl
 import com.adm.core.services.logger.LoggerImpl
+import com.adm.data.di.dataModules
+import com.adm.framework.compose.di.frameworkModules
+import com.adm.persistence.di.persistenceModule
+import com.example.downloader.di.downloaderModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModelOf
@@ -26,6 +30,9 @@ class AppClass : Application() {
                     DownloaderTypeProviderImpl(context = get())
                 }
             })
+            modules(frameworkModules)
+            modules(dataModules)
+            modules(persistenceModule)
         }
     }
 }

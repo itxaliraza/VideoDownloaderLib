@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Video Downloader</string>
+    <string name="feedback">Feedback</string>
+    <string name="loading_please_wait">Loading Please Wait</string>
+</resources>
