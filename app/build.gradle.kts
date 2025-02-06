@@ -57,12 +57,12 @@ dependencies {
      debugImplementation(libs.androidx.ui.tooling)
 
     implementation(project(":adm_downloader"))
-    implementation(project(":downloader"))
-    implementation(project(":framework"))
-    implementation(project(":domain"))
-    implementation(project(":entities"))
-    implementation(project(":data"))
-    implementation(project(":persistence"))
+    implementation(project(":downloaderr:main"))
+    implementation(project(":downloaderr:framework"))
+    implementation(project(":downloaderr:domain"))
+    implementation(project(":downloaderr:entities"))
+    implementation(project(":downloaderr:data"))
+    implementation(project(":downloaderr:persistence"))
     implementation(libs.kotlinx.serialization.json)
 
 

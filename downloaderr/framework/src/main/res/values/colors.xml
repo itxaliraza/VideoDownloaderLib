@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ads_bg">#F8F1F1</color>
+    <color name="black">#333333</color>
+    <color name="fullblack">#000000</color>
+    <color name="black20">#202020</color>
+    <color name="black30">#303030</color>
+    <color name="blacklight">#3C3C3C</color>
+    <color name="subHeadingColor">#8391A1</color>
+    <color name="almostNoColor">#E6E5E5</color>
+    <color name="app_bg_color">#F8F5F5</color>
+    <color name="cta_btn_color">#009688</color>
+    <color name="almostNoColor2">#8FC8C8C8</color>
+    <color name="almostNoColor3">#8FE2E2E2</color>
+    <color name="almostNoColor4">#DBDBDB</color>
+    <color name="grey888">#888888</color>
+    <color name="selectedGreenColor">#C1E5E5</color>
+    <color name="selectedContentColor">#1AA098</color>
+    <color name="thumbAd">#888888</color>
+    <color name="newMainColor">#FF2A4A</color>
+    <color name="lightRed">#12FF3030</color>
+    <color name="disabledColor">#37707070</color>
+    <color name="light_black">#303030</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="grey_white">#F4F7F9</color>
+    <color name="greyNew">#B7B7B7</color>
+    <color name="ad_grey_color">#EBEBEB</color>
+    <color name="line_color">#F1F1F1</color>
+    <color name="ad_atter_color">#1D0027FF</color>
+    <color name="ad_grey_color_dark">#414651</color>
+    <color name="black_light">#6E6D6D</color>
+    <color name="gray">#707070</color>
+    <color name="dark_gray">#616161</color>
+    <color name="red">#C24B4B</color>
+    <color name="dark_red">#550000</color>
+    <color name="light_red">#12F66767</color>
+    <color name="light_gray">#E8E8E8</color>
+    <color name="bg_histroy_heading">#F3F3F3</color>
+    <color name="txt_heading_gray">#B1B1B1</color>
+    <color name="lineColor">#F1F1F1</color>
+
+    <color name="tabs_selected_color">#0FD4A9</color>
+
+    <color name="newMainBg">#30323F</color>
+    <color name="lang_selected_clr">#036DD3</color>
+    <color name="navy_blue_color_ad">#1FBBFF</color>
+    <color name="transparent_clr">#00FFFFFF</color>
+    <color name="black_light_dialog">#A1000000</color>
+     <color name="adBodyColor">#707070</color>
+    <color name="largeAdBodyColor">#707070</color>
+    <color name="circle_border_color">#9DF3C2</color>
+    <color name="tick_circle_bg_color">#C9FFDE</color>
+    <color name="splitAdBg">#E5E5E5</color>
+    <color name="orange">#F0787F</color>
+    <color name="forgot_pin_grey">#8E8E93</color>
+    <color name="wav_orange">#48F0787F</color>
+    <color name="orangeGradient">#FEAC40</color>
+    <color name="pinkGradient">#E346BE</color>
+    <color name="light_orange">#EDC38B</color>
+    <color name="blue">#4C83EE</color>
+    <color name="light_blue">#204C83EE</color>
+
+    <color name="video_list_items_bg">#0DF4F4F4</color>
+
+    //New Colors
+    <color name="yellowGradient">#FF7A01</color>
+    <color name="redGradient">#FF2A4A</color>
+    <color name="ff2a4a">#FF2A4A</color>
+    <color name="newMainWhite">#D9D9D9</color>
+    <color name="vault_pink_bg">#FBEBEE</color>
+    <color name="grey9a">#9A9A9A</color>
+    <color name="lightGreen">#D3ECE4</color>
+    <color name="mainGreen">#24A070</color>
+    <color name="search_edittext_bg">#EFF0F4</color>
+
+    <color name="premium_item_bg">#8CD7E8FB</color>
+    <color name="black_slight_light">#595959</color>
+
+</resources>

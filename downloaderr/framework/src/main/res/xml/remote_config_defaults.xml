@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <!-- Add other default parameters as needed -->
+    <entry>
+        <key>color</key>
+        <value>blue</value>
+    </entry>
+</defaultsMap>
