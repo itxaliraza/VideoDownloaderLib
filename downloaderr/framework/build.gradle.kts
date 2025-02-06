@@ -32,6 +32,9 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    buildFeatures{
+        buildConfig=true
+    }
 }
 
 dependencies {
@@ -41,7 +44,6 @@ dependencies {
     implementation(libs.material)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.compose.support)
-
     implementation(libs.compose.glide)
     implementation(libs.sdp.compose)
 
@@ -53,7 +55,7 @@ dependencies {
     implementation(libs.bundles.koin)
 
     implementation(libs.test.prsr)
-    implementation(libs.bundles.ads)
+//    implementation(libs.bundles.ads)
 
 
     debugImplementation(libs.leakcanary.android)

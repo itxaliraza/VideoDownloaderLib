@@ -35,6 +35,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":downloaderr:entities"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -48,7 +49,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-    implementation(project(":downloaderr:entities"))
 
     debugImplementation(libs.leakcanary.android)
 

@@ -1,17 +1,13 @@
 package com.down.adm_core
 
+import adm.downloader.di.appModule
 import android.app.Application
-import com.adm.core.m3u8.M3u8Downloader
-import com.adm.core.m3u8.M3u8DownloaderParallel
-import com.adm.core.m3u8.MaxParallelDownloadsImpl
-import com.adm.core.m3u8.SimpleVideosMergerImpl
-import com.adm.core.m3u8.VideosMerger
 import com.adm.core.services.downloader.DownloaderTypeProvider
 import com.adm.core.services.downloader.DownloaderTypeProviderImpl
-import com.adm.core.services.logger.LoggerImpl
 import com.adm.data.di.dataModules
 import com.adm.persistence.di.persistenceModule
 import com.example.framework.di.frameworkModules
+import com.example.main.di.downloaderModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModelOf
@@ -32,6 +28,8 @@ class AppClass : Application() {
             modules(frameworkModules)
             modules(dataModules)
             modules(persistenceModule)
+            modules(appModule)
+            modules(downloaderModule)
         }
     }
 }

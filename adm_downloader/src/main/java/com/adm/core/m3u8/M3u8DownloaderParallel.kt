@@ -3,14 +3,14 @@ package com.adm.core.m3u8
 import android.content.Context
 import android.util.Log
 import com.adm.core.components.DownloadingState
+import com.adm.core.m3u8_parser.listeners.M3u8ChunksPicker
+import com.adm.core.m3u8_parser.model.SingleStream
+import com.adm.core.m3u8_parser.parsers.M3u8ChunksPickerImpl
 import com.adm.core.services.downloader.CustomDownloaderImpl
 import com.adm.core.services.downloader.MediaDownloader
 import com.adm.core.services.downloader.MediaProgress
 import com.adm.core.services.logger.Logger
 import com.adm.core.utils.createUniqueFolderName
-import com.adm.core.m3u8_parser.listeners.M3u8ChunksPicker
-import com.adm.core.m3u8_parser.model.SingleStream
-import com.adm.core.m3u8_parser.parsers.M3u8ChunksPickerImpl
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.util.UUID
 
 class M3u8DownloaderParallel(
     private val context: Context,
@@ -59,7 +58,7 @@ class M3u8DownloaderParallel(
     ): Result<String> = withContext(Dispatchers.IO) {
         tempDirPath =
             tempDirProvider.provideTempDir(
-                "mp4Videos/${url.createUniqueFolderName()}/${
+                "m3u8/${url.createUniqueFolderName()}/${
                     fileName.substringBeforeLast(
                         "."
                     )
@@ -121,11 +120,14 @@ class M3u8DownloaderParallel(
                 }
 
                 downloadJobs.awaitAll()  // Wait for all downloads to finish
-                Log.d("Cvrrr", "Base Url ${tempDirPath.path} ${                    File(directoryPath, fileName).path
-                }")
+                Log.d(
+                    "Cvrrr", "Base Url ${tempDirPath.path} ${
+                        File(directoryPath, fileName).path
+                    }"
+                )
 
 
-                val destFile =                    File(directoryPath, fileName).path
+                val destFile = File(directoryPath, fileName).path
 
                 destFile.createParentFileIfNotExists()
 
@@ -184,9 +186,9 @@ class M3u8DownloaderParallel(
     }
 
 
-    private fun emitProgress(exception: java.lang.Exception?=null) {
+    private fun emitProgress(exception: java.lang.Exception? = null) {
         _progressFlow.update {
-            MediaProgress(getCurrentStatus(), download, totalChunks,exception)
+            MediaProgress(getCurrentStatus(), download, totalChunks, exception)
         }
     }
 

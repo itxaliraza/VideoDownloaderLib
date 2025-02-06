@@ -13,7 +13,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.adm.domain.managers.get_intent.GetIntentMain
+import com.example.domain.managers.get_intent.GetIntentMain
 
 class DownloadNotificationManager(private val context: Context,private val getIntentMain: GetIntentMain) {
 
@@ -102,7 +102,7 @@ class DownloadNotificationManager(private val context: Context,private val getIn
             .setContentTitle("Download Complete")
             .setContentText(fileName)
             .setContentIntent(getPendingIntent())
-            .setSmallIcon(com.adm.framework.R.drawable.baseline_download_24)
+            .setSmallIcon(com.example.framework.R.drawable.baseline_download_24)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(false)
             .build()

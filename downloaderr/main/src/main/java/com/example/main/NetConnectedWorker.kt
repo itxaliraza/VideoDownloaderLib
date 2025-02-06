@@ -1,6 +1,7 @@
 package com.example.main
 
 import android.content.Context
+import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
@@ -8,8 +9,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.adm.domain.repository.InProgressRepository
-import com.example.downloader.DownloadingWorker.Companion.log
+import com.example.domain.repository.InProgressRepository
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -30,7 +30,7 @@ class NetConnectedWorker(private val context: Context, params: WorkerParameters)
                 showNotification = it.showNotification,
                 supportChunks = it.supportChunks,
             )
-            log("Tryin to start Download Worker")
+            Log.d("NetConnectedWorker","Tryin to start Download Worker")
 
 
             DownloadingWorker.startWorker(

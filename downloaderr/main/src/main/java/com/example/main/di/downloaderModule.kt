@@ -1,7 +1,6 @@
 package com.example.main.di
 
-import com.adm.core.services.downloader.DownloaderTypeProviderImpl
-import com.example.downloader.DownloadNotificationManager
+import com.example.main.DownloadNotificationManager
 import org.koin.dsl.module
 
 val downloaderModule = module{

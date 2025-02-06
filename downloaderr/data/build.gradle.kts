@@ -34,24 +34,18 @@ android {
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-
-
-    implementation(platform(libs.koin.bom))
-    implementation(libs.bundles.koin)
-
-    implementation(libs.test.prsr)
-
     implementation(project(":downloaderr:domain"))
-
     implementation(project(":downloaderr:framework"))
     implementation(project(":downloaderr:entities"))
     implementation(project(":downloaderr:persistence"))
     implementation(project(":downloaderr:main"))
-//    implementation(project(":downloader"))
 
 
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(platform(libs.koin.bom))
+    implementation(libs.bundles.koin)
+    implementation(libs.test.prsr)
     debugImplementation(libs.leakcanary.android)
 }

@@ -40,11 +40,9 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 
-
-    debugImplementation(libs.leakcanary.android)
-
     //Room Database
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    debugImplementation(libs.leakcanary.android)
 }

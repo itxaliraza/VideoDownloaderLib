@@ -18,12 +18,11 @@ import com.adm.core.m3u8.SimpleVideosMergerImpl
 import com.adm.core.services.downloader.DownloaderTypeProvider
 import com.adm.core.services.downloader.DownloaderTypeProviderImpl
 import com.adm.core.services.logger.LoggerImpl
-import com.adm.domain.managers.progress_manager.DownloadingState
-import com.adm.domain.managers.progress_manager.MyDownloaderManager
-import com.adm.domain.managers.progress_manager.ProgressManager
-import com.adm.framework.BuildConfig
-import com.adm.framework.core.InternetController
-import com.adm.framework.debugToast
+import com.example.domain.managers.progress_manager.DownloadingState
+import com.example.domain.managers.progress_manager.MyDownloaderManager
+import com.example.domain.managers.progress_manager.ProgressManager
+import com.example.framework.core.InternetController
+import com.example.framework.debugToast
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

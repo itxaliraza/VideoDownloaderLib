@@ -70,5 +70,6 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.compose)
     implementation(libs.sdp.compose)
+    implementation(libs.compose.glide)
 
 }

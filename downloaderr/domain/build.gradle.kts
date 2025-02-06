@@ -33,22 +33,16 @@ android {
 }
 
 dependencies {
-
-
+    implementation(project(":downloaderr:framework"))
+    implementation(project(":downloaderr:entities"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-
     implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koin)
-
     implementation(libs.sdp.compose)
-
-
-
     debugImplementation(libs.leakcanary.android)
 
-    implementation(project(":downloaderr:framework"))
-    implementation(project(":downloaderr:entities"))
+
 }
