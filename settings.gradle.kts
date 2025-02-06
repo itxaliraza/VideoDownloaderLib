@@ -26,12 +26,7 @@ dependencyResolutionManagement {
 rootProject.name = "VideoDownloaderLib"
 include(":app")
 include(":adm_downloader")
-include(":downloader")
-include(":framework")
-include(":domain")
-include(":entities")
-include(":data")
-include(":persistence")
+
 include(":downloaderr:main")
 include(":downloaderr:entities")
 include(":downloaderr:framework")
