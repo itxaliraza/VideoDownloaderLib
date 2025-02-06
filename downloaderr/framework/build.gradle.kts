@@ -58,7 +58,7 @@ dependencies {
 //    implementation(libs.bundles.ads)
 
 
-    debugImplementation(libs.leakcanary.android)
+    //debugImplementation(libs.leakcanary.android)
 
     //Text and Size-ing Libs
     implementation(libs.ssp.android)

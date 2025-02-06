@@ -12,9 +12,6 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/adm_downloader" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/data" />
-            <option value="$PROJECT_DIR$/domain" />
-            <option value="$PROJECT_DIR$/downloader" />
             <option value="$PROJECT_DIR$/downloaderr" />
             <option value="$PROJECT_DIR$/downloaderr/data" />
             <option value="$PROJECT_DIR$/downloaderr/domain" />
@@ -22,9 +19,6 @@
             <option value="$PROJECT_DIR$/downloaderr/framework" />
             <option value="$PROJECT_DIR$/downloaderr/main" />
             <option value="$PROJECT_DIR$/downloaderr/persistence" />
-            <option value="$PROJECT_DIR$/entities" />
-            <option value="$PROJECT_DIR$/framework" />
-            <option value="$PROJECT_DIR$/persistence" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

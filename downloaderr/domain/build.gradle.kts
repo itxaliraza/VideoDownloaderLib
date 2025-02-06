@@ -42,7 +42,7 @@ dependencies {
     implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koin)
     implementation(libs.sdp.compose)
-    debugImplementation(libs.leakcanary.android)
+    //debugImplementation(libs.leakcanary.android)
 
 
 }

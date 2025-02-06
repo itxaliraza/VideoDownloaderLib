@@ -4,9 +4,9 @@ import adm.downloader.di.appModule
 import android.app.Application
 import com.adm.core.services.downloader.DownloaderTypeProvider
 import com.adm.core.services.downloader.DownloaderTypeProviderImpl
-import com.adm.data.di.dataModules
-import com.adm.persistence.di.persistenceModule
-import com.example.framework.di.frameworkModules
+import com.adm.data.di.downloaderDataModule
+import com.adm.persistence.di.downloaderPersistenceModule
+import com.example.framework.di.downloaderFrameworkModule
 import com.example.main.di.downloaderModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -25,9 +25,9 @@ class AppClass : Application() {
                     DownloaderTypeProviderImpl(context = get())
                 }
             })
-            modules(frameworkModules)
-            modules(dataModules)
-            modules(persistenceModule)
+            modules(downloaderFrameworkModule)
+            modules(downloaderDataModule)
+            modules(downloaderPersistenceModule)
             modules(appModule)
             modules(downloaderModule)
         }

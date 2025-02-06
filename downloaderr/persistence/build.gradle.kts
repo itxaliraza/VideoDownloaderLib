@@ -50,7 +50,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
 
-    debugImplementation(libs.leakcanary.android)
+    //debugImplementation(libs.leakcanary.android)
 
     implementation(libs.gson )
 }

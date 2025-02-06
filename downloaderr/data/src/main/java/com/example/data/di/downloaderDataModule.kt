@@ -1,5 +1,6 @@
 package com.adm.data.di
 
+import android.system.Os.bind
 import com.adm.data.downloder.MyDownloaderManagerImpl
 import com.adm.data.downloder.ProgressManagerImpl
 import com.adm.data.repository.DownloadDirectoryProviderImpl
@@ -20,7 +21,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
-val dataModules = module {
+val downloaderDataModule = module {
     factoryOf(::LocalMediaInfoRepositoryImpl) { bind<LocalMediaInfoRepository>() }
     factoryOf(::LocalMediaRepositoryImpl) { bind<LocalMediaRepository>() }
    singleOf(::InProgressRepositoryImpl) { bind<InProgressRepository>() }

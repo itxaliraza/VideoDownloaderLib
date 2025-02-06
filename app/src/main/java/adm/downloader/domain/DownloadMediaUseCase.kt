@@ -1,6 +1,8 @@
-package adm.downloader
+package adm.downloader.domain
 
 
+import adm.downloader.model.SupportedMimeTypes
+import adm.downloader.model.VideoModel
 import com.example.domain.DownloadDirectoryProvider
 import com.example.domain.managers.progress_manager.MyDownloaderManager
 import com.example.framework.core.download.getDownloadFolder

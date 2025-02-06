@@ -47,5 +47,5 @@ dependencies {
     implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koin)
     implementation(libs.test.prsr)
-    debugImplementation(libs.leakcanary.android)
+    //debugImplementation(libs.leakcanary.android)
 }

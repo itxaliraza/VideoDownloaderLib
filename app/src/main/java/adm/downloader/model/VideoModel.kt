@@ -1,4 +1,4 @@
-package adm.downloader
+package adm.downloader.model
 
 import com.example.framework.core.models.MediaType
 import java.util.UUID

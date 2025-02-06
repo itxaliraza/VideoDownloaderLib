@@ -1,4 +1,4 @@
-package adm.downloader
+package adm.downloader.data
 
 import android.content.Context
 import android.content.Intent

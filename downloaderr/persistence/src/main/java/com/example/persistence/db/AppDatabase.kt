@@ -1,4 +1,4 @@
-package com.adm.persistence.db
+package com.example.persistence.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

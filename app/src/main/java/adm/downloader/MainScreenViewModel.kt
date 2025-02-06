@@ -1,8 +1,8 @@
 package com.down.adm_core
 
-import adm.downloader.DownloadMediaUseCase
-import adm.downloader.Quality
-import adm.downloader.VideoModel
+import adm.downloader.domain.DownloadMediaUseCase
+import adm.downloader.model.Quality
+import adm.downloader.model.VideoModel
 import android.content.Context
 import android.os.Environment
 import androidx.lifecycle.ViewModel

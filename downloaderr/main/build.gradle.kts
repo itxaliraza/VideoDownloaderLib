@@ -42,7 +42,7 @@ dependencies {
     implementation(project(":downloaderr:framework"))
     implementation(project(":downloaderr:domain"))
     implementation(project(":downloaderr:entities"))
-    implementation(project(":adm_downloader"))
+    implementation(libs.videodownloaderlib)
 
 
     implementation(libs.androidx.core.ktx)
