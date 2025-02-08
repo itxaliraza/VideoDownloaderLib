@@ -131,7 +131,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
             val total = it.totalSize
             Log.d(
                 "ProgressWorker",
-                "checkProgress(${downState})\ndownloaded=${downloaded},total=${total}"
+                "${workerDownloadingModel.id} ${workerDownloadingModel.fileName} checkProgress(${downState})\ndownloaded=${downloaded},total=${total}"
             )
             progressManager.updateProgress(workerDownloadingModel.id, downloaded, total)
 
