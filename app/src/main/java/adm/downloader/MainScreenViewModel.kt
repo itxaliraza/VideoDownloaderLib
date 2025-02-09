@@ -13,8 +13,6 @@ import com.adm.core.components.DownloadingState
 import com.example.domain.managers.progress_manager.InProgressVideoUi
 import com.example.domain.managers.progress_manager.ProgressManager
 import com.example.framework.core.models.MediaType
-import com.example.main.DownloaderSdk
-import com.example.main.DownloadingListener
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
@@ -29,7 +27,7 @@ data class ScreenState(
 class MainScreenViewModel(
     private val downloadMediaUseCase: DownloadMediaUseCase,
     private val progressManager: ProgressManager,
-    private val downloaderSdk: DownloaderSdk
+    private val downloaderSdk: com.example.sdk.DownloaderSdk
 ) : ViewModel() {
 
 
@@ -100,7 +98,7 @@ class MainScreenViewModel(
 
     init {
         viewModelScope.launch {
-            downloaderSdk.setDownloadingListener(object : DownloadingListener {
+            downloaderSdk.setDownloadingListener(object : com.example.sdk.DownloadingListener {
                 override fun onDownloadingFailed(id: String) {
                     Log.d("downloaderSdk", "onDownloadingFailed id = $id")
                 }

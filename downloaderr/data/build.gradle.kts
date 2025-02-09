@@ -47,5 +47,6 @@ dependencies {
     implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koin)
     implementation(libs.test.prsr)
+    implementation(project(":downloaderr:sdk"))
     //debugImplementation(libs.leakcanary.android)
 }

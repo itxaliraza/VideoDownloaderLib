@@ -6,12 +6,12 @@ import adm.downloader.model.VideoModel
 import com.example.domain.DownloadDirectoryProvider
 import com.example.framework.core.download.getDownloadFolder
 import com.example.framework.core.models.MediaType
-import com.example.main.DownloaderSdk
+import com.example.sdk.DownloaderSdk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class DownloadMediaUseCase(
-    private val downloaderSdk: DownloaderSdk,
+    private val downloaderSdk: com.example.sdk.DownloaderSdk,
     private val downloadDirectoryProvider: DownloadDirectoryProvider
 ) {
     suspend operator fun invoke(video: VideoModel): Long {

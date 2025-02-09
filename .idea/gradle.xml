@@ -19,6 +19,7 @@
             <option value="$PROJECT_DIR$/downloaderr/framework" />
             <option value="$PROJECT_DIR$/downloaderr/main" />
             <option value="$PROJECT_DIR$/downloaderr/persistence" />
+            <option value="$PROJECT_DIR$/downloaderr/sdk" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

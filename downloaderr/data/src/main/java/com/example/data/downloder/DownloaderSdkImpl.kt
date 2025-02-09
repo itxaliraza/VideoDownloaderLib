@@ -6,11 +6,10 @@ import com.example.domain.managers.progress_manager.DownloadingState
 import com.example.domain.managers.progress_manager.ProgressManager
 import com.example.domain.repository.InProgressRepository
 import com.example.entities.InProgressVideoDB
-import com.example.main.DownloaderSdk
-import com.example.main.DownloadingListener
 import com.example.main.DownloadingListenerManager
 import com.example.main.DownloadingWorker
 import com.example.main.WorkerDownloadingModel
+import com.example.sdk.DownloaderSdk
 
 class DownloaderSdkImpl(
     private val context: Context,
@@ -142,7 +141,7 @@ class DownloaderSdkImpl(
     override val MAX_RETRIES: Int
         get() = 5
 
-    override fun setDownloadingListener(listener: DownloadingListener?) {
+    override fun setDownloadingListener(listener: com.example.sdk.DownloadingListener?) {
         DownloadingListenerManager.setDownloadListener(listener)
     }
 }

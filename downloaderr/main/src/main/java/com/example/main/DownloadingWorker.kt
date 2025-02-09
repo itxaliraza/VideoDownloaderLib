@@ -43,7 +43,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
     CoroutineWorker(context, params), KoinComponent {
 
     private val progressManager: ProgressManager by inject()
-    private val downloaderSdk: DownloaderSdk by inject()
+    private val downloaderSdk: com.example.sdk.DownloaderSdk by inject()
     private val internetController: InternetController by inject()
     private val scanFileUseCase:ScanFileUseCase by inject()
     private val downloaderTypeProvider: DownloaderTypeProvider = DownloaderTypeProviderImpl(
@@ -52,7 +52,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
     private val downloadNotificationManager: DownloadNotificationManager by inject()
     private var notificationBuilder: NotificationCompat.Builder? = null
 
-    private val listener: DownloadingListener?
+    private val listener: com.example.sdk.DownloadingListener?
         get() = DownloadingListenerManager.getDownloadListener()
 
     init {

@@ -14,7 +14,6 @@ import com.example.domain.repository.InProgressRepository
 import com.example.domain.repository.LocalMediaInfoRepository
 import com.example.domain.repository.LocalMediaRepository
 import com.example.domain.repository.LocalRepository
-import com.example.main.DownloaderSdk
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -25,7 +24,7 @@ val downloaderDataModule = module {
     factoryOf(::LocalMediaRepositoryImpl) { bind<LocalMediaRepository>() }
     singleOf(::InProgressRepositoryImpl) { bind<InProgressRepository>() }
     singleOf(::ProgressManagerImpl) { bind<ProgressManager>() }
-    singleOf(::DownloaderSdkImpl) { bind<DownloaderSdk>() }
+    singleOf(::DownloaderSdkImpl) { bind<com.example.sdk.DownloaderSdk>() }
     singleOf(::DownloadDirectoryProviderImpl) { bind<DownloadDirectoryProvider>() }
     singleOf(::DownloadsRepositoriesImpl) { bind<LocalRepository>() }
     factory {
