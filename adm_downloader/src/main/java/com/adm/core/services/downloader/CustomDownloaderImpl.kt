@@ -1,7 +1,6 @@
 package com.adm.core.services.downloader
 
 import android.content.Context
-import android.os.Build.VERSION_CODES.M
 import com.adm.core.components.DownloadingState
 import com.adm.core.m3u8.MaxParallelDownloads
 import com.adm.core.m3u8.MaxParallelDownloadsImpl
@@ -111,8 +110,15 @@ class CustomDownloaderImpl(
 //        }
             return Result.success(File(directoryPath, fileName).path)
         } catch (e: Exception) {
-            if (e is CancellationException)
+            logger.logMessage(TAG, "Error during download: Exception $e")
+
+            if (e is CancellationException) {
+                updateStatus(DownloadingState.Failed)
+                _progressFlow.update {
+                    MediaProgress(getCurrentStatus(), getBytesInfo().first, totalBytesSize, e)
+                }
                 throw e
+            }
             updateStatus(DownloadingState.Failed)
 
             _progressFlow.update {

@@ -6,6 +6,7 @@ import com.adm.core.services.downloader.DownloaderTypeProvider
 import com.adm.core.services.downloader.DownloaderTypeProviderImpl
 import com.adm.data.di.downloaderDataModule
 import com.adm.persistence.di.downloaderPersistenceModule
+import com.example.domain.di.domainModule
 import com.example.framework.di.downloaderFrameworkModule
 import com.example.main.di.downloaderModule
 import org.koin.android.ext.koin.androidContext
@@ -30,6 +31,7 @@ class AppClass : Application() {
             modules(downloaderPersistenceModule)
             modules(appModule)
             modules(downloaderModule)
+            modules(domainModule)
         }
     }
 }

@@ -5,14 +5,16 @@ import adm.downloader.model.Quality
 import adm.downloader.model.VideoModel
 import android.content.Context
 import android.os.Environment
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.adm.core.DownloaderCoreImpl
 import com.adm.core.components.DownloadingState
 import com.example.domain.managers.progress_manager.InProgressVideoUi
-import com.example.domain.managers.progress_manager.MyDownloaderManager
 import com.example.domain.managers.progress_manager.ProgressManager
 import com.example.framework.core.models.MediaType
+import com.example.main.DownloaderSdk
+import com.example.main.DownloadingListener
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
@@ -27,7 +29,7 @@ data class ScreenState(
 class MainScreenViewModel(
     private val downloadMediaUseCase: DownloadMediaUseCase,
     private val progressManager: ProgressManager,
-    private val downloaderManager: MyDownloaderManager
+    private val downloaderSdk: DownloaderSdk
 ) : ViewModel() {
 
 
@@ -61,9 +63,15 @@ class MainScreenViewModel(
                 sourceSite = "FB",
                 headers = emptyMap()
             )
+
+
+
             downloadMediaUseCase(
                 video = video
             )
+            launch {
+
+            }
         }
     }
 
@@ -82,12 +90,30 @@ class MainScreenViewModel(
     fun playPauseVideo(inProgressVideoUi: InProgressVideoUi) {
         viewModelScope.launch {
             if (inProgressVideoUi.status == com.example.domain.managers.progress_manager.DownloadingState.Progress) {
-                downloaderManager.pauseDownloading(inProgressVideoUi.id.toLong())
+                downloaderSdk.pauseDownloading(inProgressVideoUi.id.toLong())
             } else {
-                downloaderManager.resumeDownloading(inProgressVideoUi.id.toLong())
+                downloaderSdk.resumeDownloading(inProgressVideoUi.id.toLong())
             }
         }
     }
 
+
+    init {
+        viewModelScope.launch {
+            downloaderSdk.setDownloadingListener(object : DownloadingListener {
+                override fun onDownloadingFailed(id: String) {
+                    Log.d("downloaderSdk", "onDownloadingFailed id = $id")
+                }
+
+                override fun onDownloadingCompleted(id: String) {
+                    Log.d("downloaderSdk", "onDownloadingCompleted id = $id")
+                }
+
+                override fun onDownloadingPaused(id: String, isFromUser: Boolean) {
+                    Log.d("downloaderSdk", "onDownloadingPaused id = $id $isFromUser")
+                }
+            })
+        }
+    }
 
 }

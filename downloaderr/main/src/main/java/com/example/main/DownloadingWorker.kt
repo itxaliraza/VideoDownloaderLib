@@ -13,13 +13,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.adm.core.DownloaderCoreImpl
-import com.adm.core.m3u8.MaxParallelDownloadsImpl
-import com.adm.core.m3u8.SimpleVideosMergerImpl
 import com.adm.core.services.downloader.DownloaderTypeProvider
 import com.adm.core.services.downloader.DownloaderTypeProviderImpl
-import com.adm.core.services.logger.LoggerImpl
+import com.example.domain.ScanFileUseCase
 import com.example.domain.managers.progress_manager.DownloadingState
-import com.example.domain.managers.progress_manager.MyDownloaderManager
 import com.example.domain.managers.progress_manager.ProgressManager
 import com.example.framework.core.InternetController
 import com.example.framework.debugToast
@@ -46,17 +43,17 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
     CoroutineWorker(context, params), KoinComponent {
 
     private val progressManager: ProgressManager by inject()
-    private val downloadManager: MyDownloaderManager by inject()
+    private val downloaderSdk: DownloaderSdk by inject()
     private val internetController: InternetController by inject()
+    private val scanFileUseCase:ScanFileUseCase by inject()
     private val downloaderTypeProvider: DownloaderTypeProvider = DownloaderTypeProviderImpl(
         context = context,
-        videosMerger = SimpleVideosMergerImpl(LoggerImpl()),
-        maxParallelDownloads = MaxParallelDownloadsImpl(),
-        logger = LoggerImpl(),
     )
     private val downloadNotificationManager: DownloadNotificationManager by inject()
     private var notificationBuilder: NotificationCompat.Builder? = null
 
+    private val listener: DownloadingListener?
+        get() = DownloadingListenerManager.getDownloadListener()
 
     init {
         log("Doing worker created")
@@ -78,9 +75,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
         }
         downloadNotificationManager.cancelNotification(workerDownloadingModel.id.getInt() + 1)
         startForegroundNotification()
-        val shouldRetry = startWorkerDownloading(workerDownloadingModel)
-//        if (shouldRetry)
-//            return Result.retry()
+        startWorkerDownloading(workerDownloadingModel)
         mainCoroutineScope.cancel()
         return Result.success()
     }
@@ -90,7 +85,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
     ) {
         log("startWorkerDownloading $workerDownloadingModel")
 
-        val downloader: DownloaderCoreImpl = DownloaderCoreImpl(
+        val downloader = DownloaderCoreImpl(
             url = workerDownloadingModel.url,
             fileName = workerDownloadingModel.fileName,
             destinationDirectory = workerDownloadingModel.destinationDirectory,
@@ -100,7 +95,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
             headers = workerDownloadingModel.headers ?: emptyMap()
         )
         try {
-            coroutineScope { // Use coroutineScope to handle cancellation of child coroutines
+            coroutineScope {
                 launch {
                     downloader.startDownloading(applicationContext)
                 }
@@ -109,7 +104,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
         } catch (e: CancellationException) {
             log("checkProgress: Worker Cancelled")
 
-            downloader.pauseDownloading(context) //Try to cancel downloader if it supports cancellation
+            downloader.pauseDownloading(context)
             Result.failure()
         }
 
@@ -122,10 +117,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
         var isDownloaded = false
         progressManager.updateStatus(workerDownloadingModel.id, DownloadingState.Progress)
         downloader.getProgress().sample(1000).takeWhile {
-//            val downState = downloader.getDownloadingState()
 
-//            val downloaded = downloader.getDownloadedSize()
-//            val total = downloader.getTotalSize()
             val downState = it.downStatus
             val downloaded = it.downSize
             val total = it.totalSize
@@ -143,6 +135,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
             when (downState) {
                 com.adm.core.components.DownloadingState.Success -> {
                     log("DownloadingState.Success")
+                    scanFileUseCase(context, filePath = workerDownloadingModel.destinationDirectory+"/"+workerDownloadingModel.fileName,workerDownloadingModel.mimeType)
                     progressManager.updateStatus(
                         workerDownloadingModel.id,
                         DownloadingState.Success
@@ -151,12 +144,17 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
                         workerDownloadingModel.id.toLong().toInt() + 1,
                         workerDownloadingModel.fileName
                     )
+
+
+                    listener?.onDownloadingCompleted(workerDownloadingModel.id)
+
                     isDownloaded = true
-                    false // Stop the flow
+                    false
                 }
 
                 com.adm.core.components.DownloadingState.Failed -> {
                     if (!internetController.isInternetConnected) {
+                        listener?.onDownloadingPaused(workerDownloadingModel.id,false)
                         NetConnectedWorker.startNetWorker(context)
                         progressManager.updateStatus(
                             workerDownloadingModel.id,
@@ -169,8 +167,9 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
                         false
                     } else {
 
-                        if (currentRetries >= downloadManager.MAX_RETRIES) {
-                                 context.debugToast(it.exc?.message.toString())
+                        if (currentRetries >= downloaderSdk.MAX_RETRIES) {
+                            listener?.onDownloadingFailed(workerDownloadingModel.id)
+                            context.debugToast(it.exc?.message.toString())
                             progressManager.updateStatus(
                                 workerDownloadingModel.id,
                                 DownloadingState.Failed
@@ -178,8 +177,8 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
                             false
                         } else {
                             currentRetries += 1
-                            delay((downloadManager.MAX_RETRIES - (downloadManager.MAX_RETRIES - currentRetries)) * 1000.toLong())
-                            log("Current retries = $currentRetries, delay=${downloadManager.MAX_RETRIES - (downloadManager.MAX_RETRIES - currentRetries)}")
+                            delay((downloaderSdk.MAX_RETRIES - (downloaderSdk.MAX_RETRIES - currentRetries)) * 1000.toLong())
+                            log("Current retries = $currentRetries, delay=${downloaderSdk.MAX_RETRIES - (downloaderSdk.MAX_RETRIES - currentRetries)}")
 
                             downloader.startDownloading(applicationContext)
                             true
@@ -193,33 +192,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
             }
         }
             .collectLatest { }
-//            if (downState == DownloadingState.Success) {
-//                log("DownloadingState.Success")
-//
-//                progressManager.updateStatus(workerDownloadingModel.id, DownloadingState.Success)
-//                downloadNotificationManager.showDownloadSuccessNotification(
-//                    workerDownloadingModel.id.toLong().toInt() + 1, workerDownloadingModel.fileName
-//                )
-//                 false
-//            }
-//            if (internetController.isInternetConnected.not()) {
-//                NetConnectedWorker.startNetWorker(context)
-//                progressManager.updateStatus(
-//                    workerDownloadingModel.id,
-//                    DownloadingState.PausedNetwork
-//                )
-//                updateNotification(
-//                    workerDownloadingModel.id.getInt() + 1,
-//                    total, downloaded
-//                )
-//                 true
-//            } else if (downState == DownloadingState.Failed) {
-//                progressManager.updateStatus(workerDownloadingModel.id, DownloadingState.Failed)
-//                 true
-//            }
 
-
-//        }
 
         return isDownloaded
 

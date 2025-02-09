@@ -4,24 +4,24 @@ package adm.downloader.domain
 import adm.downloader.model.SupportedMimeTypes
 import adm.downloader.model.VideoModel
 import com.example.domain.DownloadDirectoryProvider
-import com.example.domain.managers.progress_manager.MyDownloaderManager
 import com.example.framework.core.download.getDownloadFolder
 import com.example.framework.core.models.MediaType
+import com.example.main.DownloaderSdk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class DownloadMediaUseCase(
-    private val downloaderManager: MyDownloaderManager,
+    private val downloaderSdk: DownloaderSdk,
     private val downloadDirectoryProvider: DownloadDirectoryProvider
 ) {
     suspend operator fun invoke(video: VideoModel): Long {
         return withContext(Dispatchers.IO) {
             val quality = video.qualities?.get(0)
             if (quality != null) {
-                return@withContext downloaderManager.startDownloading(
+                return@withContext downloaderSdk.startDownloading(
                     url = quality.url,
                     thumb = video.thumbnail ?: quality.url,
-                    fileName =quality.name + ".mp4",
+                    fileName = quality.name + ".mp4",
                     directoryPath = downloadDirectoryProvider.getFolderInsideDownloadsDirectory(
                         quality.mediaType,
                         video.sourceSite.getDownloadFolder().mName

@@ -1,6 +1,6 @@
-package com.example.domain.managers.progress_manager
+package com.example.main
 
-interface MyDownloaderManager {
+interface DownloaderSdk {
     companion object {
         const val TAG = "MyDownloadManager"
     }
@@ -19,8 +19,14 @@ interface MyDownloaderManager {
     suspend fun pauseDownloading(id: Long)
     suspend fun resumeDownloading(id: Long)
     suspend fun deleteDownloading(id: Long)
-    suspend fun cancelDownloading(id: Long)
+     fun setDownloadingListener(listener: DownloadingListener?)
 
-    val MAX_RETRIES:Int
+    val MAX_RETRIES: Int
 
+}
+
+interface DownloadingListener {
+    fun onDownloadingFailed(id: String)
+    fun onDownloadingCompleted(id: String)
+    fun onDownloadingPaused(id: String, isFromUser: Boolean)
 }

@@ -3,18 +3,20 @@ package com.adm.data.downloder
 import android.content.Context
 import android.util.Log
 import com.example.domain.managers.progress_manager.DownloadingState
-import com.example.domain.managers.progress_manager.MyDownloaderManager
 import com.example.domain.managers.progress_manager.ProgressManager
 import com.example.domain.repository.InProgressRepository
 import com.example.entities.InProgressVideoDB
+import com.example.main.DownloaderSdk
+import com.example.main.DownloadingListener
+import com.example.main.DownloadingListenerManager
 import com.example.main.DownloadingWorker
 import com.example.main.WorkerDownloadingModel
 
-class MyDownloaderManagerImpl(
+class DownloaderSdkImpl(
     private val context: Context,
     private val inProgressRepository: InProgressRepository,
     private val progressManager: ProgressManager
-) : MyDownloaderManager {
+) : DownloaderSdk {
 
     companion object {
         const val TAG = "MyDownloadManager"
@@ -72,6 +74,7 @@ class MyDownloaderManagerImpl(
 
 
     override suspend fun pauseDownloading(id: Long) {
+        DownloadingListenerManager.onDownloadingPaused(id.toString(),true)
         progressManager.updateStatus(
             id.toString(),
             DownloadingState.Paused
@@ -105,12 +108,10 @@ class MyDownloaderManagerImpl(
 
     override suspend fun deleteDownloading(id: Long) {
         progressManager.deleteVideo(id.toString())
+//        DownloadingWorker.stopWorker(context, id.toString())
     }
 
-    override suspend fun cancelDownloading(id: Long) {
-        progressManager.updateStatus(id.toString(), DownloadingState.Paused)
-        DownloadingWorker.stopWorker(context, id.toString())
-    }
+
 
     suspend fun insertIntoDB(
         id: Long,
@@ -141,4 +142,8 @@ class MyDownloaderManagerImpl(
     override val MAX_RETRIES: Int
         get() = 5
 
+    override fun setDownloadingListener(listener: DownloadingListener?) {
+        DownloadingListenerManager.setDownloadListener(listener)
+    }
 }
+

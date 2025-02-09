@@ -141,8 +141,11 @@ class M3u8DownloaderParallel(
                 emitProgress()
                 return@withContext Result.success(File(directoryPath, fileName).path)
             } catch (e: Exception) {
-                if (e is CancellationException)
+                if (e is CancellationException) {
+                    isFailed = true
+                    emitProgress(e)
                     throw e
+                }
                 isFailed = true
                 emitProgress(e)
                 Log.d("Cvrrr", "Base Url  Exception $e")
