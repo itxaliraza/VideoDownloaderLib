@@ -29,7 +29,7 @@ class LocalMediaRepositoryImpl(
     private val context: Context, private val mediaInfoRepository: LocalMediaInfoRepository, private val urisHelper: UrisHelper
 ) : LocalMediaRepository {
     override suspend fun getAllMediaItems(file: File, mediaType: MediaType): List<DownloadsModel> {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             val files = file.listFiles()?.map { file ->
                 async {
                     val duration = try {

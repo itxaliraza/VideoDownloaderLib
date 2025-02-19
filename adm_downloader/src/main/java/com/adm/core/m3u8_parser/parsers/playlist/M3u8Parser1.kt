@@ -17,7 +17,7 @@ class M3u8Parser1 : M3u8TextParsers {
 
     override suspend fun parseM3u8Text(text: String): List<M3u8Stream> {
         log("parseM3u8Text:$text")
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             val lines = text.lines()
             val streams = mutableListOf<M3u8Stream>()
             lines.forEach {

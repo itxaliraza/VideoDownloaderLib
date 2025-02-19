@@ -39,7 +39,7 @@ class M3u8DownloaderParallel(
     private var downloadingId = ""
     private var download = 0L
     private var totalChunks = 0L
-    val scope = CoroutineScope(Dispatchers.IO)
+    val scope = CoroutineScope(Dispatchers.IO.limitedParallelism(1000))
     var isFailed = false
     var isCompleted = false
     var isPaused = false
@@ -55,7 +55,7 @@ class M3u8DownloaderParallel(
         headers: Map<String, String>,
         showNotification: Boolean,
         supportChunks: Boolean
-    ): Result<String> = withContext(Dispatchers.IO) {
+    ): Result<String> = withContext(Dispatchers.IO.limitedParallelism(1000)) {
         tempDirPath =
             tempDirProvider.provideTempDir(
                 "m3u8/${url.createUniqueFolderName()}/${
@@ -76,7 +76,7 @@ class M3u8DownloaderParallel(
                 totalChunks = streams.size.toLong()
                 logger.logMessage(TAG, "New Save Directory = $tempDirPath")
                 tempDirPath.createThisFolderIfNotExists()
-                val channel = Channel<Unit>(16)
+                val channel = Channel<Unit>(maxParallelDownloads.getMaxParallelDownloadsCount())
                 val downloadJobs = mutableListOf<Deferred<Long>>()
                 streams.forEachIndexed { index, stream ->
                     val job = scope.async {

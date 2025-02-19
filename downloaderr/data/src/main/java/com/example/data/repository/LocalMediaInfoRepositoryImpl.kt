@@ -10,7 +10,7 @@ import java.io.File
 
 class LocalMediaInfoRepositoryImpl : LocalMediaInfoRepository {
     override suspend fun getMediaDurationByFilePath(context: Context, path: String): Long {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             val file = File(path)
             try {
                 if (!file.exists()) return@withContext 0

@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.io.InputStream
 import java.io.RandomAccessFile
@@ -53,7 +54,7 @@ class CustomDownloaderImpl(
     private var totalBytesSize = 0L
     private var downloadStatus: DownloadingState = DownloadingState.Idle
 
-    private var scope = CoroutineScope(Dispatchers.IO)
+    private var scope = CoroutineScope(Dispatchers.IO.limitedParallelism(1000))
 
     val hashMap: HashMap<String, Long> = hashMapOf()
     private var filesToDownload = 1
@@ -67,7 +68,7 @@ class CustomDownloaderImpl(
     private val _progressFlow = MutableStateFlow(MediaProgress(DownloadingState.Progress, 0L, 0L))
     override fun getProgress() = _progressFlow.asStateFlow()
 
-     override suspend fun downloadMedia(
+    override suspend fun downloadMedia(
         url: String,
         fileName: String,
         directoryPath: String,
@@ -87,12 +88,12 @@ class CustomDownloaderImpl(
 
 
         try {
-            scope = CoroutineScope(Dispatchers.IO)
+            scope = CoroutineScope(Dispatchers.IO.limitedParallelism(1000))
             isPaused = false
             supportChunking = supportChunks
             logger.logMessage(
                 TAG,
-                "downloadMedia(supportChunks=${supportChunks}):\nUrl=${url}\nPath=$directoryPath"
+                "downloadMedia(supportChunks=${supportChunks}) filename= $fileName:\nUrl=${url}\nPath=$directoryPath"
             )
             model =
                 CustomDownloaderModel(
@@ -103,16 +104,17 @@ class CustomDownloaderImpl(
                     headers = headers,
                     showNotification = showNotification
                 )
-//        CoroutineScope(Dispatchers.IO).launch {
+//        CoroutineScope(Dispatchers.IO.limitedParallelism(1000)).launch {
             updateStatus(DownloadingState.Progress)
             val result = downloadFile()
             result.getOrThrow()
 //        }
             return Result.success(File(directoryPath, fileName).path)
         } catch (e: Exception) {
-            logger.logMessage(TAG, "Error during download: Exception $e")
+            logger.logMessage(TAG, "Error during download: Exception ${mDestFile?.name} $e")
 
             if (e is CancellationException) {
+
                 updateStatus(DownloadingState.Failed)
                 _progressFlow.update {
                     MediaProgress(getCurrentStatus(), getBytesInfo().first, totalBytesSize, e)
@@ -122,8 +124,10 @@ class CustomDownloaderImpl(
             updateStatus(DownloadingState.Failed)
 
             _progressFlow.update {
-                MediaProgress(getCurrentStatus(), getBytesInfo().first, totalBytesSize,e)
+                MediaProgress(getCurrentStatus(), getBytesInfo().first, totalBytesSize, e)
             }
+            logger.logMessage(TAG, "Error during download: Exception final ${mDestFile?.name} $e")
+
             scope.cancel()
             return Result.failure(e)
         }
@@ -133,7 +137,7 @@ class CustomDownloaderImpl(
         if (isPaused) {
             isPaused = false
             logger.logMessage(TAG, "Resuming download...")
-            scope = CoroutineScope(Dispatchers.IO)
+            scope = CoroutineScope(Dispatchers.IO.limitedParallelism(1000))
 
             scope.launch {
                 updateStatus(DownloadingState.Progress)
@@ -144,14 +148,14 @@ class CustomDownloaderImpl(
     }
 
     private suspend fun downloadFile(): Result<Unit> {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             try {
                 val destFile = File(
                     model.directoryPath,
                     model.fileName
                 )
                 destFile.createParentFileIfNotExists()
-                logger.logMessage(TAG, "Start Downloading destFile path=${destFile.path}")
+                logger.logMessage(TAG, "Start Downloading destFile path=${destFile.name}")
                 mDestFile = destFile
                 val jobs: ArrayList<Deferred<Result<Unit>>> = arrayListOf()
 
@@ -164,11 +168,14 @@ class CustomDownloaderImpl(
 //                        throw Exception("Error Getting Length Invalid")
 //                    }
                     totalBytesSize = chunkSupportAndLength.second
-                    logger.logMessage(TAG, "destFil totalBytesSize= $totalBytesSize")
-                    if (supportChunking && chunkSupportAndLength.first&& chunkSupportAndLength.second>0) {
+                    logger.logMessage(
+                        TAG,
+                        "destFil ${destFile.name} totalBytesSize= $totalBytesSize"
+                    )
+                    if (supportChunking && chunkSupportAndLength.first && chunkSupportAndLength.second > 0) {
                         val chunks = getChunks(chunkSupportAndLength.second)
                         filesToDownload = chunks.size
-                        logger.logMessage(TAG, "Chunks to download = $chunks")
+                        logger.logMessage(TAG, "Chunks to download ${destFile.name}= $chunks")
 
                         chunks.forEachIndexed { index, chunk ->
                             jobs.add(
@@ -181,14 +188,14 @@ class CustomDownloaderImpl(
                                     tempDestFile.createNewFileIfNotExists()
                                     logger.logMessage(
                                         TAG,
-                                        "Chunk destFile path=${tempDestFile.path}"
+                                        "Chunk destFile orig= ${destFile.name} path=${tempDestFile.name}"
                                     )
                                     val result =
                                         downloadInternal(chunk.start, chunk.end, tempDestFile)
 
                                     logger.logMessage(
                                         TAG,
-                                        "Chunk Downloaded"
+                                        "${destFile.name}Chunk Downloaded"
                                     )
                                     result
 
@@ -197,7 +204,7 @@ class CustomDownloaderImpl(
                         }
                         jobs.awaitAll()
                         scope.ensureActive()
-                        logger.logMessage(TAG, "All chunks downloaded")
+                        logger.logMessage(TAG, "All chunks downloaded ${destFile.name}")
 
                         if (!isPaused) {
                             val result = videosMerger.mergeVideos(tempDirFile!!.path, destFile.path)
@@ -216,17 +223,17 @@ class CustomDownloaderImpl(
                 return@withContext Result.success(Unit)
 
             } catch (e: CancellationException) {
-                logger.logMessage(TAG, "Error during download: paused")
+                logger.logMessage(TAG, "Error during download: paused ${mDestFile?.name}")
                 throw e
             } catch (e: Exception) {
-                logger.logMessage(TAG, "Error during download: ${e.message}")
+                logger.logMessage(TAG, "Error during download: ${e.message} ${mDestFile?.name}")
                 throw e
             }
         }
 
     }
 
-    private fun downloadInternal(
+    private suspend fun downloadInternal(
         startSize: Long,
         endSize: Long,
         destFile: File,
@@ -238,12 +245,13 @@ class CustomDownloaderImpl(
 
         try {
             connection = URL(model.url).openConnection() as HttpURLConnection
-
-            if (destFile.length() >= (endSize - startSize) &&destFile.length()>0 && endSize>0) {
+            connection.readTimeout = 5000
+            connection.connectTimeout = 5000
+            if (destFile.length() >= (endSize - startSize) && destFile.length() > 0 && endSize > 0) {
                 filesDownloaded += 1
                 logger.logMessage(
                     TAG,
-                    "Download already completed: ${destFile.path} ${destFile.length()}  ${endSize - startSize}"
+                    "Download already completed: ${destFile.name} ${destFile.length()}  ${endSize - startSize}"
                 )
 //                hashMap[destFile.path] = destFile.length()
                 updateProgress(destFile, destFile.length())
@@ -259,7 +267,7 @@ class CustomDownloaderImpl(
             if (supportChunking) {
                 logger.logMessage(
                     TAG,
-                    "Starting download. Total size: startbytes= $existingFileSize endbytes=$endSize $destFile"
+                    "Starting download. ${destFile.name} Total size: startbytes= $existingFileSize endbytes=$endSize $destFile"
                 )
                 connection.setRequestProperty("Range", "bytes=$existingFileSize-${endSize - 1}")
             }
@@ -273,22 +281,32 @@ class CustomDownloaderImpl(
 
             if (connection.responseCode == HttpURLConnection.HTTP_PARTIAL || connection.responseCode == HttpURLConnection.HTTP_OK) {
                 val totalSize = connection.contentLength + existingFileSize
-                logger.logMessage(TAG, "Starting download. Total size: $totalSize bytes.")
+                logger.logMessage(
+                    TAG,
+                    "Starting download.  ${destFile.name}Total size: $totalSize bytes."
+                )
 
                 inputStream = connection.inputStream
 
                 outputStream = RandomAccessFile(destFile, "rw")
                 outputStream.seek(destFile.length())
-                logger.logMessage(TAG, "Starting download. destlength = ${destFile.length()} ")
+                logger.logMessage(
+                    TAG,
+                    "Starting download.${destFile.name} destlength = ${destFile.length()} "
+                )
 
                 val buffer = ByteArray(1024 * 16) // 16 KB buffer
-                var bytesRead: Int
+                var bytesRead: Int = 0
 
 
-                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                while (true) {
+                    withTimeout(5000) { // 5 seconds timeout
+                        bytesRead =
+                            inputStream.read(buffer).also { if (it == -1) return@withTimeout }
+                    }
                     scope.ensureActive()
                     if (isPaused) {
-                        logger.logMessage(TAG, "Download paused buffer.")
+                        logger.logMessage(TAG, "Download paused buffer. ${destFile.name}")
                         break
                     }
                     outputStream.write(buffer, 0, bytesRead)
@@ -298,10 +316,10 @@ class CustomDownloaderImpl(
                     updateProgress(destFile, downloadedSize)
                     logger.logMessage(
                         "ProgressTracker",
-                        "Downloaded $downloadedSize / $totalSize bytes.\nUrl=${model.url}"
+                        "Downloaded  ${destFile.name} , $downloadedSize / $totalSize bytes.\nUrl=${model.url}"
                     )
                 }
-                logger.logMessage(TAG, "Download after")
+                logger.logMessage(TAG, "Download after ${destFile.name}")
 
                 scope.ensureActive()
                 updateProgress(destFile, destFile.length())
@@ -309,16 +327,19 @@ class CustomDownloaderImpl(
 
                 logger.logMessage(
                     TAG,
-                    "Download completed: ${destFile.path} ${destFile.length()} ${connection.contentLength}"
+                    "Download completed: ${destFile.name} ${destFile.length()} ${connection.contentLength}"
                 )
                 logger.logMessage(
                     TAG,
-                    "cvrrrrr Server responded with code:$endSize ength = ${connection.contentLength} end-start= ${endSize - startSize} name= ${destFile.nameWithoutExtension}"
+                    "cvrrrrr Server responded with code: ${destFile.name} $endSize ength = ${connection.contentLength} end-start= ${endSize - startSize} name= ${destFile.nameWithoutExtension}"
                 )
 
                 return Result.success(Unit)
             } else {
-                logger.logMessage(TAG, "Server responded with code: ${connection.responseCode}")
+                logger.logMessage(
+                    TAG,
+                    "Server responded with code: ${destFile.name} ${connection.responseCode}"
+                )
                 throw Exception("Server Responded with not ok len=${destFile.length()} existingFileSize=$existingFileSize startSize=$startSize endSize=$endSize diff=${endSize - startSize}, exisdif=${endSize - existingFileSize} ${connection.responseCode} ${connection.responseMessage}")
             }
         } catch (e: CancellationException) {
@@ -394,27 +415,34 @@ class CustomDownloaderImpl(
 
 
     private suspend fun getVideoChunksSupportAndLength(url: String): Result<Pair<Boolean, Long>> {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             val (supportChunks, length) = performHeadRequest(url).getOrElse {
                 false to -1L
             }
-            val (supportChunks2, length2) = if (supportChunks.not()||length==-1L) {
+            val (supportChunks2, length2) = if (supportChunks.not() || length == -1L) {
                 performGetRequestWithRange(url).getOrElse { false to -1L }
             } else {
-               supportChunks to length
+                supportChunks to length
             }
-            val finalLength: Long = maxOf(length,length2)
+            val finalLength: Long = maxOf(length, length2)
 
-            return@withContext Result.success(Pair(supportChunks||supportChunks2, finalLength.toLong()))
+            return@withContext Result.success(
+                Pair(
+                    supportChunks || supportChunks2,
+                    finalLength.toLong()
+                )
+            )
         }
     }
 
 
     private suspend fun performHeadRequest(url: String): Result<Pair<Boolean, Long>> {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             var connection: HttpURLConnection? = null
             try {
                 connection = URL(url).openConnection() as HttpURLConnection
+                connection.readTimeout = 5000
+                connection.connectTimeout = 5000
                 connection.requestMethod = "HEAD"
                 model.headers.forEach { t, u ->
                     connection.setRequestProperty(t, u)
@@ -448,11 +476,13 @@ class CustomDownloaderImpl(
      * Performs a GET request with the Range header to check for range support and fetch Content-Length.
      */
     private suspend fun performGetRequestWithRange(url: String): Result<Pair<Boolean, Long>> {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             var connection: HttpURLConnection? = null
             try {
                 connection = URL(url).openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
+                connection.readTimeout = 5000
+                connection.connectTimeout = 5000
                 connection.setRequestProperty(
                     "Range",
                     "bytes=0-1"
@@ -505,7 +535,7 @@ class CustomDownloaderImpl(
         hashMap[destFile.path] = progress
         logger.logMessage(
             "EmitProgress",
-            "Downloaded $progress / $totalBytesSize bytes.\nUrl=${model.url}"
+            "Downloaded ${mDestFile?.name} ${destFile.name} $progress / $totalBytesSize bytes.\nUrl=${model.url}"
         )
         emitProgress()
     }

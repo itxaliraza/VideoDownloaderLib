@@ -2,6 +2,7 @@ package com.down.adm_core
 
 import adm.downloader.commonui.HorizontalSpace
 import adm.downloader.commonui.VerticalSpace
+import android.os.Environment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.adm.core.services.logger.logsss
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.domain.managers.progress_manager.DownloadingState
@@ -48,6 +50,7 @@ import com.example.domain.managers.progress_manager.getStatusColor
 import com.example.framework.core.Commons.formatSizeToMbs
 import ir.kaaveh.sdpcompose.sdp
 import org.koin.androidx.compose.koinViewModel
+import java.io.File
 
 @Composable
 fun MainScreen(
@@ -61,7 +64,7 @@ fun MainScreen(
             .fillMaxSize()
     ) {
         var textUrl by remember {
-            mutableStateOf("https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8")
+            mutableStateOf("https://www.sample-videos.com/video321/mp4/720/big_buck_bunny_720p_30mb.mp4")
         }
         var fileName by remember {
             mutableStateOf(System.currentTimeMillis().toString())
@@ -88,6 +91,15 @@ fun MainScreen(
             viewModel.download(context, fileName, textUrl)
         }) {
             Text("Download")
+        }
+
+        Button(onClick = {
+            val file= File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),"alii/text/${System.currentTimeMillis()}.txt")
+            file.parentFile?.mkdirs()
+             file.writeText(logsss)
+
+        }) {
+            Text("Lpgss")
         }
 
 

@@ -22,7 +22,7 @@ class UrisHelper {
 
     suspend fun String.getVideoActualUri(contentResolver: ContentResolver): Uri? {
         Log.d("cvv", "getVideoActualUri:$this")
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             val uri = when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
                     MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -52,7 +52,7 @@ class UrisHelper {
     }
 
     private suspend fun String.getImageActualUri(contentResolver: ContentResolver): Uri? {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             val uri = when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
                     MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -82,7 +82,7 @@ class UrisHelper {
     }
 
     suspend fun String.getAudioActualUri(contentResolver: ContentResolver): Uri? {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             val uri = when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
                     MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)

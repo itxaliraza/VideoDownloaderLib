@@ -23,7 +23,7 @@ class DownloadsRepositoriesImpl(
 
     private var downloadsMap: HashMap<String, List<DownloadsModel>> = hashMapOf()
     override suspend fun getDownloadedVideoFolders(): List<DownloadsFolderModel> =
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO.limitedParallelism(1000)) {
             downloadsMap.clear()
             try {
                 val result = DownloadFolder.entries.map { entry->
@@ -88,7 +88,7 @@ class DownloadsRepositoriesImpl(
     }
 
 
-    override suspend fun deleteVideo(uris: Uri)= withContext(Dispatchers.IO) {
+    override suspend fun deleteVideo(uris: Uri)= withContext(Dispatchers.IO.limitedParallelism(1000)) {
         val newMap: java.util.HashMap<String, List<DownloadsModel>> = hashMapOf()
         downloadsMap.forEach { (s, downloadsModels) ->
           val index=  downloadsModels.indexOfFirst{

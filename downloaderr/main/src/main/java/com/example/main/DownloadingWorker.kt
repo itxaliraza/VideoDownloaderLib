@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters
 import com.adm.core.DownloaderCoreImpl
 import com.adm.core.services.downloader.DownloaderTypeProvider
 import com.adm.core.services.downloader.DownloaderTypeProviderImpl
+import com.adm.core.services.logger.logsss
 import com.example.domain.ScanFileUseCase
 import com.example.domain.managers.progress_manager.DownloadingState
 import com.example.domain.managers.progress_manager.ProgressManager
@@ -28,9 +29,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.sample
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -106,6 +105,9 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
 
             downloader.pauseDownloading(context)
             Result.failure()
+        }catch (e:Exception){
+            log("checkProgress: Worker Cancelled ${workerDownloadingModel.fileName} $e")
+
         }
 
     }
@@ -113,11 +115,11 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
 
     @OptIn(FlowPreview::class)
     private suspend fun checkProgress(downloader: DownloaderCoreImpl): Boolean {
-        log("checkProgress: started")
+        log("checkProgress: started ${workerDownloadingModel.fileName}")
         var isDownloaded = false
         progressManager.updateStatus(workerDownloadingModel.id, DownloadingState.Progress)
-        downloader.getProgress().sample(1000).takeWhile {
-
+       while (true) {
+val it= downloader.getProgress().first()
             val downState = it.downStatus
             val downloaded = it.downSize
             val total = it.totalSize
@@ -125,6 +127,10 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
                 "ProgressWorker",
                 "${workerDownloadingModel.id} ${workerDownloadingModel.fileName} checkProgress(${downState})\ndownloaded=${downloaded},total=${total}"
             )
+
+            logsss+=   "\n\nProgressWorker: "+
+            "${workerDownloadingModel.id} ${workerDownloadingModel.fileName} checkProgress(${downState})\ndownloaded=${downloaded},total=${total}"
+
             progressManager.updateProgress(workerDownloadingModel.id, downloaded, total)
 
             updateNotification(
@@ -134,7 +140,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
 
             when (downState) {
                 com.adm.core.components.DownloadingState.Success -> {
-                    log("DownloadingState.Success")
+                    log("DownloadingState.Success ${workerDownloadingModel.fileName}")
                     scanFileUseCase(context, filePath = workerDownloadingModel.destinationDirectory+"/"+workerDownloadingModel.fileName,workerDownloadingModel.mimeType)
                     progressManager.updateStatus(
                         workerDownloadingModel.id,
@@ -150,10 +156,13 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
 
                     isDownloaded = true
                     false
+                    break
                 }
 
                 com.adm.core.components.DownloadingState.Failed -> {
                     if (!internetController.isInternetConnected) {
+                        log("internet finalfailed ${workerDownloadingModel.fileName}, Current retries = $currentRetries, delay=${downloaderSdk.MAX_RETRIES - (downloaderSdk.MAX_RETRIES - currentRetries)}")
+
                         listener?.onDownloadingPaused(workerDownloadingModel.id,false)
                         NetConnectedWorker.startNetWorker(context)
                         progressManager.updateStatus(
@@ -165,9 +174,12 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
                             total, downloaded
                         )
                         false
+                        break
                     } else {
 
                         if (currentRetries >= downloaderSdk.MAX_RETRIES) {
+                            log("finalfailed ${workerDownloadingModel.fileName}, Current retries = $currentRetries, delay=${downloaderSdk.MAX_RETRIES - (downloaderSdk.MAX_RETRIES - currentRetries)}")
+
                             listener?.onDownloadingFailed(workerDownloadingModel.id)
                             context.debugToast(it.exc?.message.toString())
                             progressManager.updateStatus(
@@ -175,10 +187,11 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
                                 DownloadingState.Failed
                             )
                             false
+                            break
                         } else {
                             currentRetries += 1
                             delay((downloaderSdk.MAX_RETRIES - (downloaderSdk.MAX_RETRIES - currentRetries)) * 1000.toLong())
-                            log("Current retries = $currentRetries, delay=${downloaderSdk.MAX_RETRIES - (downloaderSdk.MAX_RETRIES - currentRetries)}")
+                                log("${workerDownloadingModel.fileName}, Current retries = $currentRetries, delay=${downloaderSdk.MAX_RETRIES - (downloaderSdk.MAX_RETRIES - currentRetries)}")
 
                             downloader.startDownloading(applicationContext)
                             true
@@ -190,8 +203,9 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
                     true // Continue the flow
                 }
             }
+           delay(1000)
         }
-            .collectLatest { }
+          /*  .collectLatest { }*/
 
 
         return isDownloaded
@@ -279,6 +293,7 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
 
         fun log(msg: String) {
             Log.d(TAG, msg)
+            logsss+="\n\n worker $TAG $msg"
         }
     }
 

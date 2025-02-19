@@ -15,7 +15,7 @@ class SimpleVideosMergerImpl(private val logger: Logger) : VideosMerger {
     }
 
     override suspend fun mergeVideos(folderPath: String, destPath: String): Result<Boolean> {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             val file = File(folderPath)
              val list = (file.listFiles()?.toList()?.mapNotNull { it } ?: emptyList())
             val sorted = list.sortedBy {

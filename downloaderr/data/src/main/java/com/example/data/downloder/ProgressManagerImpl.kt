@@ -13,8 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -25,7 +23,7 @@ import kotlinx.coroutines.sync.withLock
 class ProgressManagerImpl(
     private val inProgressRepository: InProgressRepository
 ) : ProgressManager {
-    val scope = CoroutineScope(Dispatchers.IO)
+    val scope = CoroutineScope(Dispatchers.IO.limitedParallelism(1000))
 
     val inprogressMap = mutableMapOf<String, InProgressVideoUi>()
 
@@ -43,12 +41,12 @@ class ProgressManagerImpl(
                     model
                 }
             }
-            videosProgress
+           /* videosProgress
                 .sample(1000)
                 .collectLatest {
                     batchUpdateDatabase()
                     Log.d("cvrrr", "batchUpdateDatabase")
-                }
+                }*/
         }
     }
 

@@ -11,7 +11,7 @@ import java.net.URL
 class ApiHitterImpl : ApiHitter {
     private val TAG = "ApiHitterDefault"
     override suspend fun get(link: String, headers: Map<String, String>): String? {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO.limitedParallelism(1000)) {
             var connection: HttpURLConnection? = null
             try {
                 val url = URL(link)
