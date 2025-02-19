@@ -76,7 +76,7 @@ class M3u8DownloaderParallel(
                 totalChunks = streams.size.toLong()
                 logger.logMessage(TAG, "New Save Directory = $tempDirPath")
                 tempDirPath.createThisFolderIfNotExists()
-                val channel = Channel<Unit>(16)
+                val channel = Channel<Unit>(maxParallelDownloads.getMaxParallelDownloadsCount())
                 val downloadJobs = mutableListOf<Deferred<Long>>()
                 streams.forEachIndexed { index, stream ->
                     val job = scope.async {
