@@ -61,7 +61,7 @@ fun MainScreen(
             .fillMaxSize()
     ) {
         var textUrl by remember {
-            mutableStateOf("https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8")
+            mutableStateOf("https://v1.pinimg.com/videos/iht/hls/15/a0/84/15a08434886c03d24d72766a185c77ae_720w.m3u8")
         }
         var fileName by remember {
             mutableStateOf(System.currentTimeMillis().toString())

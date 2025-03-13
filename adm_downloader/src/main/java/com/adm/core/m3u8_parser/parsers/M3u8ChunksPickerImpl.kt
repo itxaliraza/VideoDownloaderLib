@@ -28,7 +28,7 @@ class M3u8ChunksPickerImpl(
                 }
             )
         }
-        log("First URL =${chunks.getOrNull(0)}")
+        log("First URL(total=${chunks.size})=${chunks.getOrNull(0)}")
         return chunks.ifEmpty {
             val streams = playlistParser.getM3u8Streams(url = m3u8Link, headers)?.streams
             if (streams.isNullOrEmpty().not()) {

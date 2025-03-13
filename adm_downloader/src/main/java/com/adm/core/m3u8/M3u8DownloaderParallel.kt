@@ -96,7 +96,7 @@ class M3u8DownloaderParallel(
                             baseUrl + "/${stream.link}"
                         }
                         logger.logMessage(
-                            "TAG",
+                            TAG,
                             "Base Url = ${baseUrl}\nstreamLink=${stream.link}\nUrlToDownload = ${urlToDownload}"
                         )
 
