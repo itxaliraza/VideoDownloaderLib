@@ -24,7 +24,7 @@ val downloaderDataModule = module {
     factoryOf(::LocalMediaRepositoryImpl) { bind<LocalMediaRepository>() }
     singleOf(::InProgressRepositoryImpl) { bind<InProgressRepository>() }
     singleOf(::ProgressManagerImpl) { bind<ProgressManager>() }
-    singleOf(::DownloaderSdkImpl) { bind<com.example.sdk.DownloaderSdk>() }
+     singleOf(::DownloaderSdkImpl) { bind<com.example.sdk.DownloaderSdk>() }
     singleOf(::DownloadDirectoryProviderImpl) { bind<DownloadDirectoryProvider>() }
     singleOf(::DownloadsRepositoriesImpl) { bind<LocalRepository>() }
     factory {

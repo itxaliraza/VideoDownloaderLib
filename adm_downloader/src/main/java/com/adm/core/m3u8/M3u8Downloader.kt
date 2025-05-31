@@ -3,19 +3,21 @@ package com.adm.core.m3u8
 import android.content.Context
 import android.util.Log
 import com.adm.core.components.DownloadingState
+import com.adm.core.m3u8_parser.listeners.M3u8ChunksPicker
+import com.adm.core.m3u8_parser.model.SingleStream
+import com.adm.core.m3u8_parser.parsers.LinkMaker
+import com.adm.core.m3u8_parser.parsers.M3u8ChunksPickerImpl
 import com.adm.core.services.downloader.CustomDownloaderImpl
 import com.adm.core.services.downloader.MediaDownloader
 import com.adm.core.services.downloader.MediaProgress
-import com.adm.core.m3u8_parser.listeners.M3u8ChunksPicker
-import com.adm.core.m3u8_parser.model.SingleStream
-import com.adm.core.m3u8_parser.parsers.M3u8ChunksPickerImpl
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 import java.util.UUID
 
 class M3u8Downloader(
     private val context: Context,
-    private val m3U8PlaylistParser: M3u8ChunksPicker = M3u8ChunksPickerImpl(),
+    private val linkMaker: LinkMaker,
+    private val m3U8PlaylistParser: M3u8ChunksPicker = M3u8ChunksPickerImpl(linkMaker=linkMaker),
 ) : MediaDownloader {
 
     private val TAG = "M3u8Downloader"

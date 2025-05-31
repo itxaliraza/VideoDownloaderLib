@@ -9,14 +9,16 @@ import com.adm.core.m3u8.TempDirProvider
 import com.adm.core.m3u8.TempDirProviderImpl
 import com.adm.core.m3u8.VideosMerger
 import com.adm.core.m3u8_parser.listeners.M3u8ChunksPicker
+import com.adm.core.m3u8_parser.parsers.LinkMaker
 import com.adm.core.m3u8_parser.parsers.M3u8ChunksPickerImpl
 import com.adm.core.services.logger.Logger
 import com.adm.core.services.logger.LoggerImpl
 
 class DownloaderTypeProviderImpl(
     private val context: Context,
+    private val linkMaker: LinkMaker,
     private val tempDirProvider: TempDirProvider = TempDirProviderImpl(context = context),
-    private val m3U8PlaylistParser: M3u8ChunksPicker = M3u8ChunksPickerImpl(),
+    private val m3U8PlaylistParser: M3u8ChunksPicker = M3u8ChunksPickerImpl(linkMaker = linkMaker),
     private val videosMerger: VideosMerger = SimpleVideosMergerImpl(LoggerImpl()),
     private val logger: Logger = LoggerImpl(),
     private val maxParallelDownloads: MaxParallelDownloads = MaxParallelDownloadsImpl(),
@@ -30,6 +32,7 @@ class DownloaderTypeProviderImpl(
                 m3U8PlaylistParser = m3U8PlaylistParser,
                 videosMerger = videosMerger,
                 logger = logger,
+                linkMaker=linkMaker,
                 maxParallelDownloads = maxParallelDownloads,
                 ) else
             CustomDownloaderImpl(

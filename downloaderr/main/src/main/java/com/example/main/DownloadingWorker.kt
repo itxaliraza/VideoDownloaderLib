@@ -13,6 +13,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.adm.core.DownloaderCoreImpl
+import com.adm.core.m3u8_parser.parsers.LinkMaker
 import com.adm.core.services.downloader.DownloaderTypeProvider
 import com.adm.core.services.downloader.DownloaderTypeProviderImpl
 import com.example.domain.ScanFileUseCase
@@ -46,8 +47,10 @@ class DownloadingWorker(private val context: Context, params: WorkerParameters) 
     private val downloaderSdk: com.example.sdk.DownloaderSdk by inject()
     private val internetController: InternetController by inject()
     private val scanFileUseCase:ScanFileUseCase by inject()
+    private val linkMaker:LinkMaker by inject()
     private val downloaderTypeProvider: DownloaderTypeProvider = DownloaderTypeProviderImpl(
         context = context,
+        linkMaker=linkMaker
     )
     private val downloadNotificationManager: DownloadNotificationManager by inject()
     private var notificationBuilder: NotificationCompat.Builder? = null

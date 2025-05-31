@@ -23,7 +23,7 @@ class AppClass : Application() {
                 viewModelOf(::MainScreenViewModel)
 
                 single<DownloaderTypeProvider> {
-                    DownloaderTypeProviderImpl(context = get())
+                    DownloaderTypeProviderImpl(context = get(), linkMaker = get())
                 }
             })
             modules(downloaderFrameworkModule)
