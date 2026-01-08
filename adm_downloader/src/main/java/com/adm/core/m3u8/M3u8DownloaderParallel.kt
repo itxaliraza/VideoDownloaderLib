@@ -1,11 +1,10 @@
 package com.adm.core.m3u8
-
 import android.content.Context
-import android.util.Log
 import com.adm.core.components.DownloadingState
+import com.adm.core.m3u8_parser.api.ApiHitter
+import com.adm.core.m3u8_parser.api.ApiHitterImpl
 import com.adm.core.m3u8_parser.listeners.M3u8ChunksPicker
 import com.adm.core.m3u8_parser.model.SingleStream
-import com.adm.core.m3u8_parser.parsers.LinkMaker
 import com.adm.core.m3u8_parser.parsers.M3u8ChunksPickerImpl
 import com.adm.core.services.downloader.CustomDownloaderImpl
 import com.adm.core.services.downloader.MediaDownloader
@@ -26,19 +25,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.File
 
+
 class M3u8DownloaderParallel(
     private val context: Context,
-    private val linkMaker: LinkMaker,
     private val tempDirProvider: TempDirProvider = TempDirProviderImpl(context = context),
-    private val m3U8PlaylistParser: M3u8ChunksPicker = M3u8ChunksPickerImpl(linkMaker=linkMaker),
+    private val m3U8PlaylistParser: M3u8ChunksPicker = M3u8ChunksPickerImpl(),
     private val videosMerger: VideosMerger,
     private val logger: Logger,
-    private val maxParallelDownloads: MaxParallelDownloads
-
+    private val maxParallelDownloads: MaxParallelDownloads,
 ) : MediaDownloader {
 
-    private val TAG = "M3u8Downloader"
-    private var downloadingId = ""
+    companion object {
+        private const val TAG = "M3u8DownloaderParallel"
+    }
+
     private var download = 0L
     private var totalChunks = 0L
     val scope = CoroutineScope(Dispatchers.IO)
@@ -56,34 +56,72 @@ class M3u8DownloaderParallel(
         mimeType: String,
         headers: Map<String, String>,
         showNotification: Boolean,
-        supportChunks: Boolean
+        supportChunks: Boolean,
     ): Result<String> = withContext(Dispatchers.IO) {
-        tempDirPath =
-            tempDirProvider.provideTempDir(
-                "m3u8/${url.createUniqueFolderName()}/${
-                    fileName.substringBeforeLast(
-                        "."
-                    )
-                }"
-            )
+        tempDirPath = tempDirProvider.provideTempDir(
+            "m3u8/${url.createUniqueFolderName()}/${fileName.substringBeforeLast(".")}"
+        )
         tempDirPath?.let { tempDirPath ->
             try {
                 isFailed = false
                 isPaused = false
                 isCompleted = false
+
                 val streams: List<SingleStream> =
                     m3U8PlaylistParser.getChunks(m3u8Link = url, headers = headers)
-                if (streams.isEmpty())
-                    throw Exception("Invalid Url")
+                if (streams.isEmpty()) throw Exception("Invalid Url")
                 totalChunks = streams.size.toLong()
                 logger.logMessage(TAG, "New Save Directory = $tempDirPath")
                 tempDirPath.createThisFolderIfNotExists()
+
+                // Detect segment type
+                val isFmp4Segments = streams.firstOrNull()?.link
+                    ?.lowercase()
+                    ?.contains(".m4s", true) == true
+
+                logger.logMessage(
+                    TAG,
+                    "Detected segment type: ${if (isFmp4Segments) "fMP4 (.m4s)" else "TS (.ts)"}"
+                )
+
+                // For fMP4, download the SINGLE shared init segment once
+                var sharedInitFile: File? = null
+                if (isFmp4Segments) {
+                    val initUrl = extractInitSegmentUrl(url, headers)
+                    if (initUrl != null) {
+                        logger.logMessage(TAG, "Downloading shared init segment from: $initUrl")
+                        sharedInitFile = downloadSharedInitSegment(
+                            initUrl = initUrl,
+                            tempDir = tempDirPath,
+                            headers = headers
+                        )
+                        if (sharedInitFile != null) {
+                            logger.logMessage(
+                                TAG,
+                                "Shared init segment downloaded: ${sharedInitFile.length()} bytes"
+                            )
+                        }
+                    } else {
+                        logger.logMessage(TAG, "No init segment found in m3u8 playlist")
+                    }
+                }
+
                 val channel = Channel<Unit>(maxParallelDownloads.getMaxParallelDownloadsCount())
                 val downloadJobs = mutableListOf<Deferred<Long>>()
+
+                logger.logMessage("M3U8Links", "MainLink: $url")
+                streams.forEachIndexed { index, stream ->
+                    logger.logMessage("M3U8Links", "Index: $index, Stream: ${stream.link}")
+                }
+
+                // Download all media segments in parallel
                 streams.forEachIndexed { index, stream ->
                     val job = scope.async {
-                        channel.send(Unit)  // Wait for a slot in the channel
-                        Log.d("Cvrrr", "Base Url = sending $index")
+                        channel.send(Unit)
+
+                        val segmentExtension =
+                            if (isFmp4Segments) "m4s" else fileName.substringAfterLast(".")
+
                         val mediaDownloader = CustomDownloaderImpl(
                             context = context,
                             tempDirProvider = tempDirProvider,
@@ -97,14 +135,10 @@ class M3u8DownloaderParallel(
                         } else {
                             baseUrl + "/${stream.link}"
                         }
-                        logger.logMessage(
-                            TAG,
-                            "Base Url = ${baseUrl}\nstreamLink=${stream.link}\nUrlToDownload = ${urlToDownload}"
-                        )
 
                         val result = mediaDownloader.downloadMedia(
                             url = urlToDownload,
-                            fileName = "${index}.${fileName.substringAfterLast(".")}",
+                            fileName = "${index}.$segmentExtension",
                             directoryPath = tempDirPath.absolutePath,
                             mimeType = mimeType,
                             headers = headers,
@@ -112,7 +146,7 @@ class M3u8DownloaderParallel(
                             supportChunks = false
                         )
                         result.getOrThrow()
-                        Log.d("Cvrrr", "Base Url = receiving $index")
+
                         channel.receive()
                         download += 1
                         emitProgress()
@@ -121,27 +155,40 @@ class M3u8DownloaderParallel(
                     downloadJobs.add(job)
                 }
 
-                downloadJobs.awaitAll()  // Wait for all downloads to finish
-                Log.d(
-                    "Cvrrr", "Base Url ${tempDirPath.path} ${
-                        File(directoryPath, fileName).path
-                    }"
-                )
-
+                downloadJobs.awaitAll()
 
                 val destFile = File(directoryPath, fileName).path
-
                 destFile.createParentFileIfNotExists()
 
-                val result = videosMerger.mergeVideos(
-                    tempDirPath.absolutePath,
-                    destFile
-                )
-                result.getOrThrow()
-                logger.logMessage("TAG", "Streams(${streams.size}) = " + streams.toString())
-                isCompleted = true
-                emitProgress()
-                return@withContext Result.success(File(directoryPath, fileName).path)
+                val mergeResult = if (isFmp4Segments) {
+                    // Use MediaMuxer-based remuxing with the shared init segment
+                    videosMerger.mergeFragmentedMp4Segments(
+                        tempDirPath.absolutePath,
+                        destFile,
+                        sharedInitFile
+                    )
+                } else {
+                    // Legacy TS flow – simple binary concat
+                    videosMerger.mergeVideos(
+                        tempDirPath.absolutePath,
+                        destFile
+                    )
+                }
+
+                if (mergeResult.isSuccess) {
+                    logger.logMessage(TAG, "Streams(${streams.size}) merged successfully")
+                    isCompleted = true
+                    emitProgress()
+                    logger.logMessage(TAG, "✅ Download + Merge completed at $destFile")
+                    return@withContext Result.success(destFile)
+                } else {
+                    val error: Exception = (mergeResult.exceptionOrNull() as? Exception)
+                        ?: Exception("Unknown merge error")
+                    isFailed = true
+                    emitProgress(error)
+                    return@withContext Result.failure(error)
+                }
+
             } catch (e: Exception) {
                 if (e is CancellationException) {
                     isFailed = true
@@ -150,7 +197,6 @@ class M3u8DownloaderParallel(
                 }
                 isFailed = true
                 emitProgress(e)
-                Log.d("Cvrrr", "Base Url  Exception $e")
                 scope.cancel()
                 return@withContext Result.failure(e)
             }
@@ -158,20 +204,14 @@ class M3u8DownloaderParallel(
         return@withContext Result.failure(Exception("Directory Not Found"))
     }
 
-    override fun getBytesInfo(): Pair<Long, Long> {
-        return Pair(download * 1024, totalChunks * 1024)
-    }
+    override fun getBytesInfo(): Pair<Long, Long> = Pair(download * 1024, totalChunks * 1024)
 
     override fun getCurrentStatus(): DownloadingState {
-        Log.d(TAG, "getCurrentStatus: download=${download},totalChunks=${totalChunks}")
-        return if (isPaused)
-            DownloadingState.Paused
-        else if (isFailed)
-            DownloadingState.Failed
-        else if (isCompleted) {
-            DownloadingState.Success
-        } else {
-            DownloadingState.Progress
+        return when {
+            isPaused -> DownloadingState.Paused
+            isFailed -> DownloadingState.Failed
+            isCompleted -> DownloadingState.Success
+            else -> DownloadingState.Progress
         }
     }
 
@@ -182,16 +222,11 @@ class M3u8DownloaderParallel(
     }
 
     override fun resumeDownloading() {
-        if (isPaused) {
-            isPaused = false
-
-        }
+        if (isPaused) isPaused = false
         emitProgress()
-
     }
 
-
-    private fun emitProgress(exception: java.lang.Exception? = null) {
+    private fun emitProgress(exception: Exception? = null) {
         _progressFlow.update {
             MediaProgress(getCurrentStatus(), download, totalChunks, exception)
         }
@@ -203,6 +238,95 @@ class M3u8DownloaderParallel(
         scope.cancel()
     }
 
+    /**
+     * Extracts the SINGLE shared init segment URL from the m3u8 playlist.
+     * This init segment is used by ALL media segments.
+     */
+    private suspend fun extractInitSegmentUrl(
+        m3u8Url: String,
+        headers: Map<String, String>,
+    ): String? = withContext(Dispatchers.IO) {
+        try {
+            val apiHitter: ApiHitter = ApiHitterImpl()
+            val m3u8Content = apiHitter.get(m3u8Url, headers)
+
+            if (m3u8Content == null) {
+                logger.logMessage(TAG, "Failed to fetch m3u8 content")
+                return@withContext null
+            }
+
+            // Parse #EXT-X-MAP tag which specifies the shared init segment
+            val lines = m3u8Content.lines()
+            for (line in lines) {
+                if (line.startsWith("#EXT-X-MAP")) {
+                    val uriMatch = Regex("URI=\"([^\"]+)\"").find(line)
+                    if (uriMatch != null) {
+                        val uri = uriMatch.groupValues[1]
+                        logger.logMessage(TAG, "Found EXT-X-MAP with URI: $uri")
+
+                        return@withContext if (uri.startsWith("http")) {
+                            uri
+                        } else {
+                            m3u8Url.substringBeforeLast("/") + "/$uri"
+                        }
+                    }
+                }
+            }
+
+            logger.logMessage(TAG, "No #EXT-X-MAP tag found in m3u8 playlist")
+            null
+        } catch (e: Exception) {
+            logger.logMessage(TAG, "Error extracting init segment URL: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Downloads the SINGLE shared init segment file that will be used for all media segments.
+     */
+    private suspend fun downloadSharedInitSegment(
+        initUrl: String,
+        tempDir: File,
+        headers: Map<String, String>,
+    ): File? = withContext(Dispatchers.IO) {
+        try {
+            val initFile = File(tempDir, "init.mp4")
+            if (initFile.exists()) {
+                initFile.delete()
+            }
+
+            val mediaDownloader = CustomDownloaderImpl(
+                context = context,
+                tempDirProvider = tempDirProvider,
+                videosMerger = videosMerger,
+                maxParallelDownloads = maxParallelDownloads,
+                logger = logger,
+            )
+
+            val result = mediaDownloader.downloadMedia(
+                url = initUrl,
+                fileName = "init.mp4",
+                directoryPath = tempDir.absolutePath,
+                mimeType = "video/mp4",
+                headers = headers,
+                showNotification = false,
+                supportChunks = false
+            )
+
+            result.getOrNull()?.let {
+                val downloadedFile = File(it)
+                if (downloadedFile.exists() && downloadedFile.length() > 0) {
+                    return@withContext downloadedFile
+                }
+            }
+
+            logger.logMessage(TAG, "Failed to download init segment")
+            null
+        } catch (e: Exception) {
+            logger.logMessage(TAG, "Error downloading init segment: ${e.message}")
+            null
+        }
+    }
 }
 
 
