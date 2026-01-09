@@ -28,8 +28,9 @@ import java.io.File
 
 class M3u8DownloaderParallel(
     private val context: Context,
+    private val linkMaker: LinkMaker,
     private val tempDirProvider: TempDirProvider = TempDirProviderImpl(context = context),
-    private val m3U8PlaylistParser: M3u8ChunksPicker = M3u8ChunksPickerImpl(),
+    private val m3U8PlaylistParser: M3u8ChunksPicker = M3u8ChunksPickerImpl(linkMaker = linkMaker),
     private val videosMerger: VideosMerger,
     private val logger: Logger,
     private val maxParallelDownloads: MaxParallelDownloads,
